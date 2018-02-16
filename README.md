@@ -1,1 +1,3 @@
-this tool allow a user to use the MS605 reader/writer
+this tool allows a user to use the MS605 reader/writer
+
+iso and raw mode

@@ -26,9 +26,10 @@ def shell_loop():
     device = '?'
     settings = 'hico'
     save = False # use to init the value at null because nothing to save
+    mode = 'iso'
     while status:
     	# display a command prompt
-    	cmd = raw_input(Back.WHITE+Fore.RED+' msr605 '+device+'('+settings+')> '+Back.RESET+Fore.CYAN+' ')
+    	cmd = raw_input(Back.WHITE+Fore.RED+' msr605 '+device+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' ')
         os.system('clear')
 
     	# tokenize the command input
@@ -53,13 +54,28 @@ def shell_loop():
         except:
             continue
 
-        print(Back.WHITE+Fore.RED+' msr605 '+device+'('+settings+')> '+Back.RESET+Fore.CYAN+' '+cmd)
+
+        try:
+            if cmd_tokens[0] == 'mode':
+                if cmd_tokens[1] == 'iso':
+                    mode = 'iso'
+                elif cmd_tokens[1] == 'raw':
+                    mode = 'raw'
+                else:
+                    print(' [*] this mode does not exist')
+                    print(' [*] try: iso or raw')
+                    mode = mode
+        except:
+            continue
+
+
+        print(Back.WHITE+Fore.RED+' msr605 '+device+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' '+cmd)
 
 
     	# execute the command and retrieve new status
     	try:
             if cmd_tokens[0] != 'use':
-        	status = msr605_cmd.execute(cmd_tokens, device, settings, save)
+        	status = msr605_cmd.execute(cmd_tokens, device, settings, mode, save)
                 save = status
     	except:
     	    continue

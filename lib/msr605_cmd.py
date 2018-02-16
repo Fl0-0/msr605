@@ -10,20 +10,24 @@ import msr
 
 # auto-completion
 cmdList = [ 'clear', 
+            'bulk_compare',
+            'bulk_copy',
+            'bulk_erase',
+            'bulk_read',
+            'bulk_write',
 	    'compare', 
-	    'compare_bulk', 
 	    'copy', 
-	    'copy_bulk', 
 	    'erase', 
-	    'erase_bulk', 
 	    'exit', 
 	    'help', 
+            'iso',
+            'mode ',
+            'raw',
 	    'read', 
             'save',
             'settings ',
             'use ',
 	    'write', 
-	    'write_bulk', 
 	    'quit']
 
 ############################################################
@@ -58,6 +62,7 @@ def help_menu():
         print " compare/bulk_compare"
         print " copy/bulk_copy"
         print " erase"
+        print " mode (iso/raw)"
         print " read"
         print " use /dev/ttyUSB0 (look at dmesg)"
         print " write/bulk_write"
@@ -65,8 +70,7 @@ def help_menu():
 
 
 
-
-def execute(cmd_tokens, device, settings, save):
+def execute(cmd_tokens, device, settings, mode, save):
 	"""
 		execute the command+args
 		command: cmd_tokens[0]
@@ -122,12 +126,18 @@ def execute(cmd_tokens, device, settings, save):
             ############ COMPARE
             if cmd_tokens[0] == 'compare':
                 print "[*] swipe card to read, ^C to cancel"
-                t1, t2, t3 = dev.read_tracks()
+                if mode == 'iso':
+                    t1, t2, t3 = dev.read_tracks()
+                if mode == 'raw':
+                    t1, t2, t3 = dev.read_raw_tracks()
                 print "Track 1:", t1
                 print "Track 2:", t2
                 print "Track 3:", t3
                 print "[*] swipe card to compare, ^C to cancel"
-                b1, b2, b3 = dev.read_tracks()
+                if mode == 'iso':
+                    b1, b2, b3 = dev.read_tracks()
+                if mode == 'raw':
+                    b1, b2, b3 = dev.read_raw_tracks()
                 if b1 == t1 and b2 == t2 and t3 == t3:
                     print "[+] Compare OK"
                 else:
@@ -141,14 +151,20 @@ def execute(cmd_tokens, device, settings, save):
             ############ BULK COMPARE
             if cmd_tokens[0] == 'bulk_compare':
                 print "[*] swipe card to read, ^C to cancel"
-                t1, t2, t3 = dev.read_tracks()
+                if mode == 'iso':
+                    t1, t2, t3 = dev.read_tracks()
+                if mode == 'raw':
+                    t1, t2, t3 = dev.read_raw_tracks()
                 print "Track 1:", t1
                 print "Track 2:", t2
                 print "Track 3:", t3
                 while True:
                     print "[*] swipe card to compare, ^C to cancel"
                     try:
-                        b1, b2, b3 = dev.read_tracks()
+                        if mode == 'iso':
+                            b1, b2, b3 = dev.read_tracks()
+                        if mode == 'raw':
+                            b1, b2, b3 = dev.read_raw_tracks()
                     except KeyboardInterrupt:
                         break
                     if b1 == t1 and b2 == t2 and t3 == t3:
@@ -164,7 +180,11 @@ def execute(cmd_tokens, device, settings, save):
             ############# READ
             if cmd_tokens[0] == 'read':
                 print "[*] swipe card to read, ^C to cancel"
-                t1, t2, t3 = dev.read_tracks()
+
+                if mode == 'iso':
+                    t1, t2, t3 = dev.read_tracks()
+                if mode == 'raw':
+                    t1, t2, t3 = dev.read_raw_tracks()
                 print "Track 1:", t1
                 print "Track 2:", t2
                 print "Track 3:", t3
@@ -177,6 +197,29 @@ def execute(cmd_tokens, device, settings, save):
                 saveItToFile = '1: '+t1+'\n'+'2: '+t2+'\n'+'3: '+t3
                 return saveItToFile
 
+            ############# BULK READ
+            if cmd_tokens[0] == 'bulk_read':
+                while True:
+                    print "[*] swipe card to read, ^C to cancel"
+                    try:
+                        if mode == 'iso':
+                            t1, t2, t3 = dev.read_tracks()
+                        if mode == 'raw':
+                            t1, t2, t3 = dev.read_raw_tracks()
+                    except KeyboardInterrupt:
+                        break
+                    print "Track 1:", t1
+                    print "Track 2:", t2
+                    print "Track 3:", t3
+                    if t1 == None:
+                        t1 = ''
+                    if t2 == None:
+                        t2 = ''
+                    if t3 == None:
+                        t3 = ''
+                return True
+                
+
             ############# ERASE
             if cmd_tokens[0] == 'erase':
                 print "[*] swipe card to erase all tracks, ^C to cancel"
@@ -187,7 +230,11 @@ def execute(cmd_tokens, device, settings, save):
             ############# COPY
             if cmd_tokens[0] == 'copy':
                 print "[*] swipe card to read, ^C to cancel"
-                t1, t2, t3 = dev.read_tracks()
+                if mode == 'iso':
+                    t1, t2, t3 = dev.read_tracks()
+                if mode == 'raw':
+                    print('[-] cannot copy in raw mode yet, please use: mode iso')
+                    return True
                 print "Track 1:", t1
                 print "Track 2:", t2
                 print "Track 3:", t3
@@ -206,7 +253,11 @@ def execute(cmd_tokens, device, settings, save):
             ############## BULK COPY
             if cmd_tokens[0] == 'bulk_copy':
                 print "[*] swipe card to read, ^C to cancel"
-                t1, t2, t3 = dev.read_tracks()
+                if mode == 'iso':
+                    t1, t2, t3 = dev.read_tracks()
+                if mode == 'raw':
+                    print('[-] cannot copy in raw mode yet, please use: mode iso')
+                    return True
                 print "Track 1:", t1
                 print "Track 2:", t2
                 print "Track 3:", t3
@@ -246,7 +297,11 @@ def execute(cmd_tokens, device, settings, save):
                 if t3 != "":
                     kwargs['t3'] = t3
                 print "[*] swipe card to write, ^C to cancel"
-                dev.write_tracks(**kwargs)
+                if mode == 'iso':
+                    dev.write_tracks(**kwargs)
+                if mode == 'raw':
+                    print('[-] cannot write in raw mode yet, please use: mode iso')
+                    return True
                 print "[+] Written."
                 return True
             
@@ -269,7 +324,11 @@ def execute(cmd_tokens, device, settings, save):
                 while True:
                     print "[*] swipe card to write, ^C to cancel"
                     try:
-                        dev.write_tracks(**kwargs)
+                        if mode == 'iso':
+                            dev.write_tracks(**kwargs)
+                        if mode == 'raw':
+                            print('[-] cannot write in raw mode yet, please use: mode iso')
+                            return True
                     except KeyboardInterrupt:
                         break
                     print "[+] Written."
