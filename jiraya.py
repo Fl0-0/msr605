@@ -8,6 +8,7 @@ import readline
 import os, sys
 sys.path.insert(0,'./lib/')
 import msr605_cmd
+import msr
 import time
 
     
@@ -30,46 +31,42 @@ def shell_loop():
     while status:
     	# display a command prompt
     	cmd = raw_input(Back.WHITE+Fore.RED+' msr605 '+device+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' ')
-        os.system('clear')
+        #os.system('clear')
 
     	# tokenize the command input
     	cmd_tokens = tokenize(cmd)
     
-        try:
-            if cmd_tokens[0] == 'use':
-                device = cmd_tokens[1]
-        except:
-            continue
+        if cmd_tokens[0] == 'use':
+            try:
+                device = msr.msr(cmd_tokens[1])
+            except:
+                print '[*] the msr605 is probably not in '+cmd_tokens[1]
+                print '[*] please check that'
+                device = "?"
 
-        try:
-            if cmd_tokens[0] == 'settings':
-                if cmd_tokens[1] == 'hico':
-                    settings = 'hico'
-                elif cmd_tokens[1] == 'loco':
-                    settings = 'loco'
-                else:
-                    print(' [*] this settings does not exist')
-                    print(' [*] try: hico or loco')
-                    settings == settings
-        except:
-            continue
-
-
-        try:
-            if cmd_tokens[0] == 'mode':
-                if cmd_tokens[1] == 'iso':
-                    mode = 'iso'
-                elif cmd_tokens[1] == 'raw':
-                    mode = 'raw'
-                else:
-                    print(' [*] this mode does not exist')
-                    print(' [*] try: iso or raw')
-                    mode = mode
-        except:
-            continue
+        if cmd_tokens[0] == 'settings':
+            if cmd_tokens[1] == 'hico':
+                settings = 'hico'
+            elif cmd_tokens[1] == 'loco':
+                settings = 'loco'
+            else:
+                print(' [*] this settings does not exist')
+                print(' [*] try: hico or loco')
+                settings == settings
 
 
-        print(Back.WHITE+Fore.RED+' msr605 '+device+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' '+cmd)
+        if cmd_tokens[0] == 'mode':
+            if cmd_tokens[1] == 'iso':
+                mode = 'iso'
+            elif cmd_tokens[1] == 'raw':
+                mode = 'raw'
+            else:
+                print(' [*] this mode does not exist')
+                print(' [*] try: iso or raw')
+                mode = mode
+
+
+        #print(Back.WHITE+Fore.RED+' msr605 '+device+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' '+cmd)
 
 
     	# execute the command and retrieve new status

@@ -57,20 +57,20 @@ def help_menu():
 	print " ?/help\t\t\t display this help"
 	print " quit/exit\t\t quit the program"
 	print " clear\t\t\t clear the screen"
-        print " settings (hico/loco)"
+        print " settings\t\t hico/loco"
 	print "="*i
         print " compare/bulk_compare"
         print " copy/bulk_copy"
         print " erase"
         print " mode (iso/raw)"
         print " read"
-        print " use /dev/ttyUSB0 (look at dmesg)"
+        print " use /dev/ttyUSB0\t look at dmesg"
         print " write/bulk_write"
 	print "="*i
 
 
 
-def execute(cmd_tokens, device, settings, mode, save):
+def execute(cmd_tokens, dev, settings, mode, save):
 	"""
 		execute the command+args
 		command: cmd_tokens[0]
@@ -80,7 +80,7 @@ def execute(cmd_tokens, device, settings, mode, save):
         saveItToFile = save
 
         ############## DEVICE EMPTY
-        if device == "?":
+        if dev == "?":
 	    ############## HELP
     	    if (cmd_tokens[0] == '?' or cmd_tokens[0]=='help'):
 		help_menu()
@@ -101,7 +101,8 @@ def execute(cmd_tokens, device, settings, mode, save):
 
         ############## DEVICE NOT EMPTY
         else:
-            dev = msr.msr(device)
+            
+            print dev
 
             if settings == 'hico':
                 dev.set_coercivity(dev.hico)
