@@ -62,7 +62,7 @@ def help_menu():
         print " compare/bulk_compare"
         print " copy/bulk_copy"
         print " erase"
-        print " mode (iso/raw)"
+        print " mode\t\t\t iso/raw"
         print " read"
         print " use /dev/ttyUSB0\t look at dmesg"
         print " write/bulk_write"
@@ -102,8 +102,6 @@ def execute(cmd_tokens, dev, settings, mode, save):
         ############## DEVICE NOT EMPTY
         else:
             
-            print dev
-
             if settings == 'hico':
                 dev.set_coercivity(dev.hico)
 

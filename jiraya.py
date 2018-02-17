@@ -24,13 +24,14 @@ def shell_loop():
     readline.parse_and_bind('tab: complete')
 
     status = True
-    device = '?'
+    dev = '?'
+    device = dev
     settings = 'hico'
     save = False # use to init the value at null because nothing to save
     mode = 'iso'
     while status:
     	# display a command prompt
-    	cmd = raw_input(Back.WHITE+Fore.RED+' msr605 '+device+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' ')
+    	cmd = raw_input(Back.WHITE+Fore.RED+' msr605 '+dev+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' ')
         #os.system('clear')
 
     	# tokenize the command input
@@ -39,10 +40,12 @@ def shell_loop():
         if cmd_tokens[0] == 'use':
             try:
                 device = msr.msr(cmd_tokens[1])
+                dev = cmd_tokens[1]
             except:
                 print '[*] the msr605 is probably not in '+cmd_tokens[1]
                 print '[*] please check that'
                 device = "?"
+                dev = "?"
 
         if cmd_tokens[0] == 'settings':
             if cmd_tokens[1] == 'hico':

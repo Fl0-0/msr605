@@ -296,107 +296,107 @@ class msr(serial.Serial):
         if status != "0":
             raise Exception("set_hico error : %c" % status)
 
-if __name__ == "__main__":
-    # parse arguments
-    import argparse
-    parser = argparse.ArgumentParser()
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument ('-r', '--read', action="store_true", help="read magnetic tracks")
-    group.add_argument ('-w', '--write', action="store_true", help="write magnetic tracks")
-    group.add_argument ('-e', '--erase', action="store_true", help="erase magnetic tracks")
-    group.add_argument ('-C', '--hico', action="store_true", help="select high coercivity mode")
-    group.add_argument ('-c', '--loco', action="store_true", help="select low coercivity mode")
-    group.add_argument ('-b', '--bpi', help="bit per inch for each track (h or l)")
-    parser.add_argument('-d', '--device', help="path to serial communication device")
-    parser.add_argument('-0', '--raw', action="store_true", help="do not use ISO encoding/decoding")
-    parser.add_argument('-t', '--tracks', default="123", help="select tracks (1, 2, 3, 12, 23, 13, 123)")
-    parser.add_argument('-B', '--bpc', help="bit per caracters for each track (5 to 8)")
-    parser.add_argument('data', nargs="*", help="(write only) 1, 2 or 3 arguments, matching --tracks")
-    args = parser.parse_args();
-    
-    if (args.read or args.erase) and len(args.data) != 0 or args.write and (len(args.data) != len(args.tracks)):
-        print "too many arguments"
-        parser.print_help()
-        exit(1)
-    
-    tracks = [False, False, False]
-    data = ["", "", ""]
-    for i in range(0,len(args.tracks)):
-        n = int(args.tracks[i])-1
-        if(n<0 or n>2 or tracks[n]):
-            parser.print_help()
-            exit(1)
-        tracks[n] = True
-        if(args.write):
-            data[n] = args.data[i]
-
-    bpc1 = 8
-    bpc2 = 8
-    bpc3 = 8
-    if args.bpc:
-        bpc1 = ord(args.bpc[0])-48
-        bpc2 = ord(args.bpc[1])-48
-        bpc3 = ord(args.bpc[2])-48
-    elif args.raw:
-        args.bpc = "888" # force setup, as it's kept accross runs
-
-    if args.bpi:
-        bpi1 = args.bpi[0] != "l"
-        bpi2 = args.bpi[1] != "l"
-        bpi3 = args.bpi[2] != "l"
-    
-    # main code
-    try:
-        dev = msr(args.device)
-        
-        if args.bpc:
-            dev.set_bpc(bpc1,bpc2,bpc3)
-        
-        if args.read & args.raw:
-            s1,s2,s3 = dev.read_raw_tracks()
-            def print_result(num, res):
-                s,l,perr,lerr = res
-                line = "%d=%s" % (num, s)
-                if len(s) != l: line += " (+%d null)" % (l-len(s))
-                if lerr: line += " (LRC error)"
-                print line
-                if -1 != perr.find("^"): print "  %s <- parity errors" % perr
-            if tracks[0]: print_result(1, msr.unpack_raw(s1, msr.track1_map,  6, bpc1))
-            if tracks[1]: print_result(2, msr.unpack_raw(s2, msr.track23_map, 4, bpc2))
-            if tracks[2]: print_result(3, msr.unpack_raw(s3, msr.track23_map, 4, bpc3))
-        
-        elif args.read: # iso mode
-            s1,s2,s3 = dev.read_tracks()
-            if tracks[0]: print "1=%s" % s1
-            if tracks[1]: print "2=%s" % s2
-            if tracks[2]: print "3=%s" % s3
-        
-        elif args.write & args.raw:
-            d1 = ""
-            d2 = ""
-            d3 = ""
-            if tracks[0]:
-                d1 = msr.pack_raw(data[0], msr.track1_map,  6, bpc1)
-            if tracks[1]:
-                d2 = msr.pack_raw(data[1], msr.track23_map, 4, bpc2)
-            if tracks[2]:
-                d3 = msr.pack_raw(data[2], msr.track23_map, 4, bpc3)
-            dev.write_raw_tracks(d1,d2,d3)
-            
-        elif args.write: # iso mode
-            dev.write_tracks(data[0],data[1],data[2])
-        
-        elif args.erase:
-            dev.erase_tracks(tracks[0],tracks[1],tracks[2])
-
-        elif args.loco:
-            dev.set_coercivity(msr.loco)
-            
-        elif args.hico:
-            dev.set_coercivity(msr.hico)
-
-        elif args.bpi:
-            dev.set_bpi(bpi1,bpi2,bpi3)
-        
-    except Exception as e:
-        print e
+#if __name__ == "__main__":
+#    # parse arguments
+#    import argparse
+#    parser = argparse.ArgumentParser()
+#    group = parser.add_mutually_exclusive_group(required=True)
+#    group.add_argument ('-r', '--read', action="store_true", help="read magnetic tracks")
+#    group.add_argument ('-w', '--write', action="store_true", help="write magnetic tracks")
+#    group.add_argument ('-e', '--erase', action="store_true", help="erase magnetic tracks")
+#    group.add_argument ('-C', '--hico', action="store_true", help="select high coercivity mode")
+#    group.add_argument ('-c', '--loco', action="store_true", help="select low coercivity mode")
+#    group.add_argument ('-b', '--bpi', help="bit per inch for each track (h or l)")
+#    parser.add_argument('-d', '--device', help="path to serial communication device")
+#    parser.add_argument('-0', '--raw', action="store_true", help="do not use ISO encoding/decoding")
+#    parser.add_argument('-t', '--tracks', default="123", help="select tracks (1, 2, 3, 12, 23, 13, 123)")
+#    parser.add_argument('-B', '--bpc', help="bit per caracters for each track (5 to 8)")
+#    parser.add_argument('data', nargs="*", help="(write only) 1, 2 or 3 arguments, matching --tracks")
+#    args = parser.parse_args();
+#    
+#    if (args.read or args.erase) and len(args.data) != 0 or args.write and (len(args.data) != len(args.tracks)):
+#        print "too many arguments"
+#        parser.print_help()
+#        exit(1)
+#    
+#    tracks = [False, False, False]
+#    data = ["", "", ""]
+#    for i in range(0,len(args.tracks)):
+#        n = int(args.tracks[i])-1
+#        if(n<0 or n>2 or tracks[n]):
+#            parser.print_help()
+#            exit(1)
+#        tracks[n] = True
+#        if(args.write):
+#            data[n] = args.data[i]
+#
+#    bpc1 = 8
+#    bpc2 = 8
+#    bpc3 = 8
+#    if args.bpc:
+#        bpc1 = ord(args.bpc[0])-48
+#        bpc2 = ord(args.bpc[1])-48
+#        bpc3 = ord(args.bpc[2])-48
+#    elif args.raw:
+#        args.bpc = "888" # force setup, as it's kept accross runs
+#
+#    if args.bpi:
+#        bpi1 = args.bpi[0] != "l"
+#        bpi2 = args.bpi[1] != "l"
+#        bpi3 = args.bpi[2] != "l"
+#    
+#    # main code
+#    try:
+#        dev = msr(args.device)
+#        
+#        if args.bpc:
+#            dev.set_bpc(bpc1,bpc2,bpc3)
+#        
+#        if args.read & args.raw:
+#            s1,s2,s3 = dev.read_raw_tracks()
+#            def print_result(num, res):
+#                s,l,perr,lerr = res
+#                line = "%d=%s" % (num, s)
+#                if len(s) != l: line += " (+%d null)" % (l-len(s))
+#                if lerr: line += " (LRC error)"
+#                print line
+#                if -1 != perr.find("^"): print "  %s <- parity errors" % perr
+#            if tracks[0]: print_result(1, msr.unpack_raw(s1, msr.track1_map,  6, bpc1))
+#            if tracks[1]: print_result(2, msr.unpack_raw(s2, msr.track23_map, 4, bpc2))
+#            if tracks[2]: print_result(3, msr.unpack_raw(s3, msr.track23_map, 4, bpc3))
+#        
+#        elif args.read: # iso mode
+#            s1,s2,s3 = dev.read_tracks()
+#            if tracks[0]: print "1=%s" % s1
+#            if tracks[1]: print "2=%s" % s2
+#            if tracks[2]: print "3=%s" % s3
+#        
+#        elif args.write & args.raw:
+#            d1 = ""
+#            d2 = ""
+#            d3 = ""
+#            if tracks[0]:
+#                d1 = msr.pack_raw(data[0], msr.track1_map,  6, bpc1)
+#            if tracks[1]:
+#                d2 = msr.pack_raw(data[1], msr.track23_map, 4, bpc2)
+#            if tracks[2]:
+#                d3 = msr.pack_raw(data[2], msr.track23_map, 4, bpc3)
+#            dev.write_raw_tracks(d1,d2,d3)
+#            
+#        elif args.write: # iso mode
+#            dev.write_tracks(data[0],data[1],data[2])
+#        
+#        elif args.erase:
+#            dev.erase_tracks(tracks[0],tracks[1],tracks[2])
+#
+#        elif args.loco:
+#            dev.set_coercivity(msr.loco)
+#            
+#        elif args.hico:
+#            dev.set_coercivity(msr.hico)
+#
+#        elif args.bpi:
+#            dev.set_bpi(bpi1,bpi2,bpi3)
+#        
+#    except Exception as e:
+#        print e
