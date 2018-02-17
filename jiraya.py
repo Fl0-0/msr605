@@ -39,13 +39,17 @@ def shell_loop():
     	# tokenize the command input
     	cmd_tokens = tokenize(cmd)
     
-        if cmd_tokens[0] == 'use':
+        if ((cmd_tokens[0] == 'use') and (len(cmd_tokens)==2)):
             try:
                 device = msr.msr(cmd_tokens[1])
                 dev = cmd_tokens[1]
             except:
                 print '[*] the msr605 is probably not in '+cmd_tokens[1]
                 print '[*] please check that'
+                device = "?"
+                dev = "?"
+        elif ((cmd_tokens[0]=='use') and (len(cmd_tokens)!=2)):
+                print '[*] use need an argument: /dev/ttyUSB0'
                 device = "?"
                 dev = "?"
 

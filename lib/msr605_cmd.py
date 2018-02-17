@@ -76,7 +76,8 @@ def help_menu():
         print " copy/bulk_copy"
         print " erase"
         print " mode\t\t\t iso/raw"
-        print " read"
+        print " read/bulk_read"
+        print " save"
         print " use /dev/ttyUSB0\t look at dmesg"
         print " write/bulk_write"
 	print "="*i
@@ -242,15 +243,13 @@ def execute(cmd_tokens, dev, settings, mode):
 
             ############# BULK READ
             if cmd_tokens[0] == 'bulk_read':
-                while True:
-                    print "[*] swipe card to read, ^C to cancel"
-                    try:
-                        if mode == 'iso':
-                            t1, t2, t3 = dev.read_tracks()
-                        if mode == 'raw':
-                            t1, t2, t3 = dev.read_raw_tracks()
-                    except KeyboardInterrupt:
-                        break
+                var_test = True
+                while var_test:
+                    print "[*] swipe card to read"
+                    if mode == 'iso':
+                        t1, t2, t3 = dev.read_tracks()
+                    if mode == 'raw':
+                        t1, t2, t3 = dev.read_raw_tracks()
 
                     print "Track 1:", t1
                     print "Track 2:", t2
@@ -269,21 +268,27 @@ def execute(cmd_tokens, dev, settings, mode):
                         filename = 'autosave'
                         savedata(filename, './autosave', saveItToFile)
 
-                    jiraya.Save = saveItToFile
+
+                    next = raw_input("continue? [Yes/no] ")
+
+                    if ((next.lower()=="y") or (next.lower()=="yes")):
+                        var_test = True
+                    else:
+                        var_test = False
 
                 return True
                 
 
             ############# ERASE
             if cmd_tokens[0] == 'erase':
-                print "[*] swipe card to erase all tracks, ^C to cancel"
+                print "[*] swipe card to erase all tracks"
                 dev.erase_tracks(t1=True, t2=True, t3=True)
                 print "[+] Erased."
                 return True
 
             ############# COPY
             if cmd_tokens[0] == 'copy':
-                print "[*] swipe card to read, ^C to cancel"
+                print "[*] swipe card to read"
                 if mode == 'iso':
                     t1, t2, t3 = dev.read_tracks()
                 if mode == 'raw':
@@ -322,16 +327,22 @@ def execute(cmd_tokens, dev, settings, mode):
                     kwargs['t2'] = t2[1:-1]
                 if t3 is not None:
                     kwargs['t3'] = t3[1:-1]
-                while True:
+
+                var_test = True
+                while var_test:
                     try:
-                        print "[*] swipe card to write, ^C to cancel"
+                        print "[*] swipe card to write"
                         dev.write_tracks(**kwargs)
                         print "[+] Written."
-                    except KeyboardInterrupt:
-                        break
                     except Exception as e:
                         print "[-] Failed. Error:", e
-                        break
+
+                    next = raw_input("continue? [Yes/no] ")
+
+                    if ((next.lower()=="y") or (next.lower()=="yes")):
+                        var_test = True
+                    else:
+                        var_test = False
                 return True
             
             ############## WRITE
@@ -350,7 +361,7 @@ def execute(cmd_tokens, dev, settings, mode):
                     kwargs['t2'] = t2
                 if t3 != "":
                     kwargs['t3'] = t3
-                print "[*] swipe card to write, ^C to cancel"
+                print "[*] swipe card to write"
                 if mode == 'iso':
                     dev.write_tracks(**kwargs)
                 if mode == 'raw':
@@ -375,17 +386,24 @@ def execute(cmd_tokens, dev, settings, mode):
                     kwargs['t2'] = t2
                 if t3 != "":
                     kwargs['t3'] = t3
-                while True:
-                    print "[*] swipe card to write, ^C to cancel"
-                    try:
-                        if mode == 'iso':
-                            dev.write_tracks(**kwargs)
-                        if mode == 'raw':
-                            print('[-] cannot write in raw mode yet, please use: mode iso')
-                            return True
-                    except KeyboardInterrupt:
-                        break
+
+                var_test = True
+                while var_test:
+                    print "[*] swipe card to write"
+                    if mode == 'iso':
+                        dev.write_tracks(**kwargs)
+                    if mode == 'raw':
+                        print('[-] cannot write in raw mode yet, please use: mode iso')
+                        return True
+
                     print "[+] Written."
+
+                    next = raw_input("continue? [Yes/no] ")
+
+                    if ((next.lower()=="y") or (next.lower()=="yes")):
+                        var_test = True
+                    else:
+                        var_test = False
                 return True
 
             ############## SAVE
@@ -402,7 +420,7 @@ def execute(cmd_tokens, dev, settings, mode):
                 return True
 
             ############## AUTOSAVE
-            if cmd_tokens[0] == 'autosave':
+            if ((cmd_tokens[0] == 'autosave') and (len(cmd_tokens)==2)):
                 if cmd_tokens[1] == "on":
                     jiraya.autoSave = True
                 elif cmd_tokens[1] == "off":
@@ -411,10 +429,12 @@ def execute(cmd_tokens, dev, settings, mode):
                     print '[+] autosave = '+str(jiraya.autoSave)
                 else:
                     print '[*] autosave '+cmd_tokens[1]+' does not exist'
+            elif ((cmd_tokens[0] == 'autosave') and (len(cmd_tokens)!=2)):
+                print '[*] autosave need an argument: on/off/status'
 
                 return True
 
             ############## IF COMMAND DOES NOT EXIST
-            else:
-                return True
+            print "[*] that command does not exist"
+            return True
             
