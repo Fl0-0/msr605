@@ -7,9 +7,12 @@ from os import listdir
 import colorama
 from colorama import Fore, Back
 import msr
+sys.path.insert(0,'../')
+import jiraya
 
 # auto-completion
-cmdList = [ 'clear', 
+cmdList = [ 'autosave ',
+            'clear', 
             'bulk_compare',
             'bulk_copy',
             'bulk_erase',
@@ -22,13 +25,22 @@ cmdList = [ 'clear',
 	    'help', 
             'iso',
             'mode ',
+            'off'
+            'on',
             'raw',
 	    'read', 
             'save',
             'settings ',
+            'status',
             'use ',
 	    'write', 
-	    'quit']
+	    'quit',
+            'dev/',
+            'ttyUSB0',
+            'ttyUSB1',
+            'ttyUSB2',
+            'ttyUSB3']
+
 
 ############################################################
 ############################################################
@@ -58,6 +70,7 @@ def help_menu():
 	print " quit/exit\t\t quit the program"
 	print " clear\t\t\t clear the screen"
         print " settings\t\t hico/loco"
+        print " autosave\t\t on/off/status"
 	print "="*i
         print " compare/bulk_compare"
         print " copy/bulk_copy"
@@ -68,16 +81,37 @@ def help_menu():
         print " write/bulk_write"
 	print "="*i
 
+def savedata(filename, folder, data):
+    try:
+        if not os.path.isdir(folder):
+            os.makedirs(folder)
+    
+        timestamp = str(datetime.datetime.now())
+        timestamp = timestamp.replace(' ', '_')
+        try: 
+            with open(folder+'/'+filename+'_'+timestamp,'w') as fp:
+                fp.write(data)
+        except Exception,e:
+            print str(e)
 
 
-def execute(cmd_tokens, dev, settings, mode, save):
+        result =  True
+    except:
+        result = False
+
+    if result:
+        print "[+] Saved to "+folder+"/"+filename+"_"+timestamp
+    else:
+        print "[-] Error during saving"
+
+
+def execute(cmd_tokens, dev, settings, mode):
 	"""
 		execute the command+args
 		command: cmd_tokens[0]
 		args: cmd_tokens[i]
 	"""
 
-        saveItToFile = save
 
         ############## DEVICE EMPTY
         if dev == "?":
@@ -93,15 +127,15 @@ def execute(cmd_tokens, dev, settings, mode, save):
 
     	    ############## QUIT
             if (cmd_tokens[0]=="quit" or cmd_tokens[0]=="exit"):
-		return False # to get out the while loop
+                sys.exit(1)
 
             ##############
-            print "[*] you should use the command 'use' before doing anything else, bitch"
+            print "[*] you should use the command 'use' before doing anything else"
             return True # to stay in the while loop in tha apt.py
 
         ############## DEVICE NOT EMPTY
         else:
-            
+
             if settings == 'hico':
                 dev.set_coercivity(dev.hico)
 
@@ -120,7 +154,7 @@ def execute(cmd_tokens, dev, settings, mode, save):
 
     	    ############## QUIT
             if (cmd_tokens[0]=="quit" or cmd_tokens[0]=="exit"):
-		return False # to get out the while loop
+                sys.exit(1)
 
             ############ COMPARE
             if cmd_tokens[0] == 'compare':
@@ -184,17 +218,27 @@ def execute(cmd_tokens, dev, settings, mode, save):
                     t1, t2, t3 = dev.read_tracks()
                 if mode == 'raw':
                     t1, t2, t3 = dev.read_raw_tracks()
+
                 print "Track 1:", t1
                 print "Track 2:", t2
                 print "Track 3:", t3
+
                 if t1 == None:
                     t1 = ''
                 if t2 == None:
                     t2 = ''
                 if t3 == None:
                     t3 = ''
-                saveItToFile = '1: '+t1+'\n'+'2: '+t2+'\n'+'3: '+t3
-                return saveItToFile
+
+                saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
+
+                if jiraya.autoSave:
+                    filename = 'autosave'
+                    savedata(filename, './autosave', saveItToFile)
+
+                jiraya.Save = saveItToFile
+
+                return True
 
             ############# BULK READ
             if cmd_tokens[0] == 'bulk_read':
@@ -207,15 +251,26 @@ def execute(cmd_tokens, dev, settings, mode, save):
                             t1, t2, t3 = dev.read_raw_tracks()
                     except KeyboardInterrupt:
                         break
+
                     print "Track 1:", t1
                     print "Track 2:", t2
                     print "Track 3:", t3
+
                     if t1 == None:
                         t1 = ''
                     if t2 == None:
                         t2 = ''
                     if t3 == None:
                         t3 = ''
+
+                    saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
+
+                    if jiraya.autoSave:
+                        filename = 'autosave'
+                        savedata(filename, './autosave', saveItToFile)
+
+                    jiraya.Save = saveItToFile
+
                 return True
                 
 
@@ -335,22 +390,27 @@ def execute(cmd_tokens, dev, settings, mode, save):
 
             ############## SAVE
             if cmd_tokens[0] == 'save':
-                if type(saveItToFile) == str:
+                if jiraya.Save != "":
                     filename = raw_input("Filename: ")
 
-                    if not os.path.isdir('./archives'):
-                        os.makedirs('./archives')
+                    savedata(filename, './archives', jiraya.Save)
 
-                    timestamp = str(datetime.datetime.now())
-                    timestamp = timestamp.replace(' ', '_')
-
-                    with open('./archives/'+filename+'_'+timestamp,'w') as fp:
-                        fp.write(saveItToFile)
-
-                    print "[+] Saved"
-                    saveItToFile = False
+                    jiraya.Save = ""
                 else:
                     print "[*] You should read a card first"
+
+                return True
+
+            ############## AUTOSAVE
+            if cmd_tokens[0] == 'autosave':
+                if cmd_tokens[1] == "on":
+                    jiraya.autoSave = True
+                elif cmd_tokens[1] == "off":
+                    jiraya.autoSave = False
+                elif cmd_tokens[1] == "status":
+                    print '[+] autosave = '+str(jiraya.autoSave)
+                else:
+                    print '[*] autosave '+cmd_tokens[1]+' does not exist'
 
                 return True
 

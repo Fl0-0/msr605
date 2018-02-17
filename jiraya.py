@@ -11,7 +11,10 @@ import msr605_cmd
 import msr
 import time
 
-    
+global Save, autoSave
+Save = ""
+autoSave = False
+
 def tokenize(string):
     """
     	to get a well formed command+args
@@ -27,7 +30,6 @@ def shell_loop():
     dev = '?'
     device = dev
     settings = 'hico'
-    save = False # use to init the value at null because nothing to save
     mode = 'iso'
     while status:
     	# display a command prompt
@@ -73,12 +75,8 @@ def shell_loop():
 
 
     	# execute the command and retrieve new status
-    	try:
-            if cmd_tokens[0] != 'use':
-        	status = msr605_cmd.execute(cmd_tokens, device, settings, mode, save)
-                save = status
-    	except:
-    	    continue
+        if cmd_tokens[0] != 'use':
+            msr605_cmd.execute(cmd_tokens, device, settings, mode)
 
 
 def closeProgram(signal, frame):
