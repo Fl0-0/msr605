@@ -27,12 +27,12 @@ def tokenize(string):
     """
     return shlex.split(string)
 
-def shell_loop():
+def shell_loop(device):
     # auto-completion
     readline.set_completer(msr605_cmd.completer)
     readline.parse_and_bind('tab: complete')
 
-    dev_ptr = test.msr_init("/dev/ttyUSB0")
+    dev_ptr = test.msr_init(device)
     if dev_ptr == False:
         print " [-] Please check that the device is on /dev/ttyUSB0"
         sys.exit(1)
@@ -58,8 +58,9 @@ def closeProgram(signal, frame):
 def main():
     signal.signal(signal.SIGINT, closeProgram) # close program with Ctrl+C
 
+    device = "/dev/ttyUSB0"
 
-    shell_loop()
+    shell_loop(device)
 
 if __name__ == '__main__':
     main()

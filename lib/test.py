@@ -139,20 +139,24 @@ def set_coercivity(coercivity,dev_ptr):
     elif coercivity == 'loco':
         status, _, _ = execute_waitresult("\x79",dev_ptr) # y
     if status != "0":
-        raise Exception(" [-] set_coercivity() error: %c" % status)
+        print(" [-] set_coercivity() error: %c" % status)
+        #raise Exception(" [-] set_coercivity() error: %c" % status)
+        return False
     print " [+] set coercivity: OK"
 
 def set_bpc(bpc1, bpc2, bpc3,dev_ptr):
     status, result, _ = execute_waitresult("\x6F"+chr(bpc1)+chr(bpc2)+chr(bpc3),dev_ptr) # \x6F: o
     if status != "0":
-        raise Exception(" [-] set_bpc() error: %c" % status)
+        print(" [-] set_bpc() error: %c" % status)
+        #raise Exception(" [-] set_bpc() error: %c" % status)
+        return False
     print " [+] set bpc: OK"
 
 def read_raw_tracks(dev_ptr):
     status, _, data = execute_waitresult("\x6D",dev_ptr) # m : read raw data
     #data = map_7bits[0]
     if status != "0":
-        print " [*] maybe it is an empty card"
+        print " [*] maybe it is an empty card, or not in the good type: set type iso/raw"
         #raise Exception(" [-] read_raw_tracks() error: %c" % status)
         return "","",""
     #return data
@@ -169,7 +173,9 @@ def read_iso_tracks(dev_ptr):
 def decode_rawdatablock(data):
     # header
     if data[0:4] != "\x1B\x73\x1B\x01":
-        raise Exception("bad datablock : don't start with 1B 73 1B 01", data)
+        print(" [-] bad datablock : don't start with 1B 73 1B 01", data)
+        #raise Exception("bad datablock : don't start with 1B 73 1B 01", data)
+        return "","",""
     
     # first strip
     strip1_start = 4
@@ -179,29 +185,41 @@ def decode_rawdatablock(data):
     # second strip
     strip2_start = strip1_end+2
     if data[strip1_end:strip2_start] != "\x1B\x02":
-        raise Exception("bad datablock : missing 1B 02 at position %d" % strip1_end, data)
+        print(" [-] bad datablock : missing 1B 02 at position %d" % strip1_end, data)
+        #raise Exception("bad datablock : missing 1B 02 at position %d" % strip1_end, data)
+        return "","",""
+
     strip2_end = strip2_start + 1 + ord(data[strip2_start])
     strip2 = data[strip2_start+1:strip2_end]
     
     # third strip
     strip3_start = strip2_end+2
     if data[strip2_end:strip3_start] != "\x1B\x03":
-        raise Exception("bad datablock : missing 1B 03 at position %d" % strip2_end, data)
+        print(" [-] bad datablock : missing 1B 03 at position %d" % strip2_end, data)
+        #raise Exception("bad datablock : missing 1B 03 at position %d" % strip2_end, data)
+        return "","",""
+
     strip3_end = strip3_start + 1 + ord(data[strip3_start])
     strip3 = data[strip3_start+1:strip3_end]
 
     # trailer
     if data[strip3_end:] != "\x3F"+"\x1C":
-        raise Exception("bad datablock : missing 3F 1C at position %d", strip3_end, data)
+        print(" [-] bad datablock : missing 3F 1C at position %d", strip3_end, data)
+        #raise Exception("bad datablock : missing 3F 1C at position %d", strip3_end, data)
+        return "","",""
             
     return strip1, strip2, strip3
 
 def decode_isodatablock(data):
     # header and end
     if data[0:4] != "\x1B\x73\x1B\x01":
-        raise Exception("bad datablock : don't start with 1B 73 1B 01", data)
+        print(" [-] bad datablock : don't start with 1B 73 1B 01", data)
+        #raise Exception("bad datablock : don't start with 1B 73 1B 01", data)
+        return "","",""
     if data[-2:] != "\x3F\x1C":
-        raise Exception("bad datablock : don't end with 3F 1C", data)
+        print(" [-] bad datablock : don't end with 3F 1C", data)
+        #raise Exception("bad datablock : don't end with 3F 1C", data)
+        return "","",""
     
     # first strip
     strip1_start = 4
@@ -215,7 +233,9 @@ def decode_isodatablock(data):
     # second strip
     strip2_start = strip1_end+2
     if data[strip1_end:strip2_start] != "\x1B\x02":
-        raise Exception("bad datablock : missing 1B 02 at position %d" % strip1_end, data)
+        print(" [-] bad datablock : missing 1B 02 at position %d" % strip1_end, data)
+        #raise Exception("bad datablock : missing 1B 02 at position %d" % strip1_end, data)
+        return "","",""
     strip2_end = data.index("\x1B", strip2_start)
     if strip2_end == strip2_start:
         strip2_end += 2
@@ -226,7 +246,9 @@ def decode_isodatablock(data):
     # third strip
     strip3_start = strip2_end+2
     if data[strip2_end:strip3_start] != "\x1B\x03":
-        raise Exception("bad datablock : missing 1B 03 at position %d" % strip2_end, data)
+        print(" [-] bad datablock : missing 1B 03 at position %d" % strip2_end, data)
+        #raise Exception("bad datablock : missing 1B 03 at position %d" % strip2_end, data)
+        return "","",""
     if data[strip3_start] == "\x1B":
         strip3 = None
     else:
@@ -239,7 +261,9 @@ def write_raw_tracks(t1, t2, t3,dev_ptr):
     data = encode_rawdatablock(t1,t2,t3)
     status, _, _ = execute_waitresult("\x6E"+data,dev_ptr)
     if status != "0":
-        raise Exception(" [-] write_raw_tracks() error: %c" % status)
+        print(" [-] write_raw_tracks() error: %c" % status)
+        #raise Exception(" [-] write_raw_tracks() error: %c" % status)
+        return False
 
 def write_iso_tracks(t1, t2, t3,dev_ptr):
     if t1 == None:
@@ -251,7 +275,7 @@ def write_iso_tracks(t1, t2, t3,dev_ptr):
     data = encode_isodatablock(t1,t2,t3)
     status, _, _ = execute_waitresult("\x77"+data,dev_ptr)
     if status != "0":
-        print ' [*] probably too fast, take your time to swipe the card '
+        print ' [*] probably too fast, take your time to swipe the card'
         #raise Exception(" [-] write_iso_tracks() error: %c" % status)
         return False
     return True
@@ -284,12 +308,14 @@ def erase_tracks(dev_ptr,t1, t2, t3):
 
     status, _, _ = execute_waitresult("\x63"+chr(mask),dev_ptr)
     if status != "0":
-        raise Exception(" [-] erase_tracks() error: %c" % status)
+        print(" [-] erase_tracks() error: %c" % status)
+        #raise Exception(" [-] erase_tracks() error: %c" % status)
 
 def set_leadingzero(self, track13, track2):
     status, result, _ = execute_waitresult("\x7A"+track13+track2)
     if status != "0":
-        raise Exception(" [-] set_leadingzero() error: %c" % status)
+        print(" [-] set_leadingzero() error: %c" % status)
+        #raise Exception(" [-] set_leadingzero() error: %c" % status)
 
 def set_bpi(bpi1, bpi2, bpi3,dev_ptr):
     modes = []
@@ -311,7 +337,8 @@ def set_bpi(bpi1, bpi2, bpi3,dev_ptr):
     for m in modes:
         status, result, _ = execute_waitresult("\x62"+m,dev_ptr)
         if status != "0":
-            raise Exception(" [-] set_bpi() error: %c for %s" % (status,hex(m)))
+            print(" [-] set_bpi() error: %c for %s" % (status,hex(m)))
+            #raise Exception(" [-] set_bpi() error: %c for %s" % (status,hex(m)))
 
 def get_device_model(dev_ptr):
     #result = dev_ptr.write("\x1B"+"\x74") # escape_code = \x1B
@@ -363,7 +390,9 @@ def do_communication_test(dev_ptr):
 def do_sensor_test():
     status, _, _ = execute_waitresult("\x86")
     if status != "0":
-        raise Exception(" [-] do_sensor_test() error: %c" % status)
+        print(" [-] do_sensor_test() error: %c" % status)
+        #raise Exception(" [-] do_sensor_test() error: %c" % status)
+        return False
     print " [+] the card sensing circuit works properly"
 
 
