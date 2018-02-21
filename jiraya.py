@@ -8,12 +8,18 @@ import readline
 import os, sys
 sys.path.insert(0,'./lib/')
 import msr605_cmd
-import msr
+import test
 import time
 
-global Save, autoSave
+global Save, autoSave, bpc, bpi, mode, track_type, dev_ptr
+
 Save = ""
 autoSave = False
+bpc = ['8', '8', '8'] # bits per character for each tracks
+bpi = ['210', '75', '210'] # bits per inch for each tracks
+mode = 'hico' 
+track_type = 'iso'
+
 
 def tokenize(string):
     """
@@ -26,61 +32,24 @@ def shell_loop():
     readline.set_completer(msr605_cmd.completer)
     readline.parse_and_bind('tab: complete')
 
-    status = True
-    dev = '?'
-    device = dev
-    settings = 'hico'
-    mode = 'iso'
-    while status:
+    dev_ptr = test.msr_init("/dev/ttyUSB0")
+    if dev_ptr == False:
+        print " [-] Please check that the device is on /dev/ttyUSB0"
+        sys.exit(1)
+
+    # init 
+    test.msr_reset(dev_ptr)
+    test.set_coercivity(mode,dev_ptr)
+    test.set_bpc(int(bpc[0]), int(bpc[1]), int(bpc[2]),dev_ptr)
+    while True:
     	# display a command prompt
-    	cmd = raw_input(Back.WHITE+Fore.RED+' msr605 '+dev+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' ')
-        #os.system('clear')
+    	cmd = raw_input(Back.WHITE+Fore.RED+' msr605 (help/settings)> '+Back.RESET+Fore.CYAN+' ')
 
     	# tokenize the command input
     	cmd_tokens = tokenize(cmd)
-    
-        if ((cmd_tokens[0] == 'use') and (len(cmd_tokens)==2)):
-            try:
-                device = msr.msr(cmd_tokens[1])
-                dev = cmd_tokens[1]
-            except:
-                print '[*] the msr605 is probably not in '+cmd_tokens[1]
-                print '[*] please check that'
-                device = "?"
-                dev = "?"
-        elif ((cmd_tokens[0]=='use') and (len(cmd_tokens)!=2)):
-                print '[*] use need an argument: /dev/ttyUSB0'
-                device = "?"
-                dev = "?"
 
-        if cmd_tokens[0] == 'settings':
-            if cmd_tokens[1] == 'hico':
-                settings = 'hico'
-            elif cmd_tokens[1] == 'loco':
-                settings = 'loco'
-            else:
-                print(' [*] this settings does not exist')
-                print(' [*] try: hico or loco')
-                settings == settings
-
-
-        if cmd_tokens[0] == 'mode':
-            if cmd_tokens[1] == 'iso':
-                mode = 'iso'
-            elif cmd_tokens[1] == 'raw':
-                mode = 'raw'
-            else:
-                print(' [*] this mode does not exist')
-                print(' [*] try: iso or raw')
-                mode = mode
-
-
-        #print(Back.WHITE+Fore.RED+' msr605 '+device+'('+mode+'/'+settings+')> '+Back.RESET+Fore.CYAN+' '+cmd)
-
-
-    	# execute the command and retrieve new status
-        if cmd_tokens[0] != 'use':
-            msr605_cmd.execute(cmd_tokens, device, settings, mode)
+    	# execute the command
+        msr605_cmd.execute(cmd_tokens, dev_ptr)
 
 
 def closeProgram(signal, frame):
@@ -88,7 +57,7 @@ def closeProgram(signal, frame):
 
 def main():
     signal.signal(signal.SIGINT, closeProgram) # close program with Ctrl+C
-    os.system('clear')
+
 
     shell_loop()
 

@@ -5,13 +5,14 @@ import serial
 from os.path import isfile, join
 from os import listdir
 import colorama
-from colorama import Fore, Back
-import msr
+from colorama import Back, Back
+#import msr605_drv
 sys.path.insert(0,'../')
 import jiraya
 
 # auto-completion
 cmdList = [ 'autosave ',
+            'bpc ',
             'clear', 
             'bulk_compare',
             'bulk_copy',
@@ -23,23 +24,23 @@ cmdList = [ 'autosave ',
 	    'erase', 
 	    'exit', 
 	    'help', 
+            'hico',
             'iso',
+            'led',
+            'loco',
             'mode ',
-            'off'
+            'off',
             'on',
+            'play',
             'raw',
 	    'read', 
             'save',
-            'settings ',
-            'status',
+            'set ',
+            'settings',
+            'type ',
             'use ',
 	    'write', 
-	    'quit',
-            'dev/',
-            'ttyUSB0',
-            'ttyUSB1',
-            'ttyUSB2',
-            'ttyUSB3']
+	    'quit']
 
 
 ############################################################
@@ -61,26 +62,30 @@ def completer(text, state):
 ############################################################
 
 def help_menu():
-	i = 60
-	print "="*i
+	print "="*60
 	print " Play with MSR605 **\\(^.^)//**"
         print " Magnetic Swipe Card Reader/Writer"
-	print "="*i
+	print "="*23+"GENERAL"+"="*30
 	print " ?/help\t\t\t display this help"
 	print " quit/exit\t\t quit the program"
 	print " clear\t\t\t clear the screen"
-        print " settings\t\t hico/loco"
-        print " autosave\t\t on/off/status"
-	print "="*i
+        print " settings\t\t display current settings"
+        print " use /dev/ttyUSB0\t look at dmesg"
+	print "="*23+"ACTIONS"+"="*30
         print " compare/bulk_compare"
         print " copy/bulk_copy"
         print " erase"
-        print " mode\t\t\t iso/raw"
         print " read/bulk_read"
         print " save"
-        print " use /dev/ttyUSB0\t look at dmesg"
         print " write/bulk_write"
-	print "="*i
+        print " play <g,y,r,all> led <on,off>"
+	print "="*23+"SETTINGS"+"="*29
+        print " set mode <hico,loco>"
+        print " set type <iso,raw>"
+        print " set autosave <on,off>"
+        print " set bpc <777,456,...>\t not working properly (default: 888)"
+        print " set bpi <1,2,3,all> <210,75>"
+	print "="*60
 
 def savedata(filename, folder, data):
     try:
@@ -95,7 +100,6 @@ def savedata(filename, folder, data):
         except Exception,e:
             print str(e)
 
-
         result =  True
     except:
         result = False
@@ -106,335 +110,410 @@ def savedata(filename, folder, data):
         print "[-] Error during saving"
 
 
-def execute(cmd_tokens, dev, settings, mode):
-	"""
-		execute the command+args
-		command: cmd_tokens[0]
-		args: cmd_tokens[i]
-	"""
+def execute(cmd_tokens, dev_ptr):
+    import test
+    """
+    	execute the command+args
+    	command: cmd_tokens[0]
+    	args: cmd_tokens[i]
+    """
+    ############# SETTINGS
+    if cmd_tokens[0] == 'settings':
+        #status = test.get_hico_loco_status(dev_ptr)
+        #model = test.get_device_model(dev_ptr)
+        #firmware = test.get_firmware_version(dev_ptr)
+        #comm = test.do_communication_test(dev_ptr)
+        #ram = test.do_ram_test(dev_ptr)
+        i = 60
+        print "="*i
+        print ' write mode: '+jiraya.mode
+        print ' track type: '+jiraya.track_type
+        print ' bpc1: '+jiraya.bpc[0]+"\t bpc2: "+jiraya.bpc[1]+"\t bpc3: "+jiraya.bpc[2]
+        print ' bpi1: '+jiraya.bpi[0]+"\t bpi2: "+jiraya.bpi[1]+"\t bpi3: "+jiraya.bpi[2]
+        print ' autosave: '+ str(jiraya.autoSave)
+        print "="*i
+        #print ' device model: '+model
+        #print ' firmare version: '+firmware
+        #print ' RAM: '+ram
+        #print ' communication: '+comm
+        #print "="*i
+
+        return True
+    
+    if cmd_tokens[0] == 'set':
+        if cmd_tokens[1] == 'mode':
+            if cmd_tokens[2] == 'hico':
+                jiraya.mode = 'hico'
+                test.set_coercivity('hico',dev_ptr)
+            elif cmd_tokens[2] == 'loco':
+                jiraya.mode = 'loco'
+                test.set_coercivity('loco',dev_ptr)
+            else:
+                print(' [*] this mode does not exist')
+                print(' [*] try: hico or loco')
+                jiraya.mode == jiraya.mode
+    
+        elif cmd_tokens[1] == 'type':
+            if cmd_tokens[2] == 'iso':
+                jiraya.track_type = 'iso'
+                print ' [+] type iso: OK'
+            elif cmd_tokens[2] == 'raw':
+                jiraya.track_type = 'raw'
+                print ' [+] type raw: OK'
+            else:    
+                print(' [*] this track type does not exist')
+                print(' [*] try: raw or iso')
+                jiraya.track_type = jiraya.track_type
+    
+        elif cmd_tokens[1] == 'bpc':
+            bpc_value = cmd_tokens[2]
+            jiraya.bpc[0] = bpc_value[0]
+            jiraya.bpc[1] = bpc_value[1]
+            jiraya.bpc[2] = bpc_value[2]
+            test.set_bpc(int(jiraya.bpc[0]), int(jiraya.bpc[1]), int(jiraya.bpc[2]))
+            print ' [+] bpc '+cmd_tokens[2]+": OK"
+    
+        elif cmd_tokens[1] == "bpi":
+            if cmd_tokens[2] == "1":
+                jiraya.bpi[0] = cmd_tokens[3]
+            elif cmd_tokens[2] == "2":
+                jiraya.bpi[1] = cmd_tokens[3]
+            elif cmd_tokens[2] == "3":
+                jiraya.bpi[2] = cmd_tokens[3]
+            elif cmd_tokens[2] == "all":
+                jiraya.bpi[0] = cmd_tokens[3]
+                jiraya.bpi[1] = cmd_tokens[3]
+                jiraya.bpi[2] = cmd_tokens[3]
+            else:
+                print " [*] useage: set bpi <1,2,3,all> <210,75>"
+            test.set_bpi(jiraya.bpi[0], jiraya.bpi[1], jiraya.bpi[2], dev_ptr)
+            print " [+] bpi to track "+cmd_tokens[2]+" set to "+cmd_tokens[3]+": OK"
 
 
-        ############## DEVICE EMPTY
-        if dev == "?":
-	    ############## HELP
-    	    if (cmd_tokens[0] == '?' or cmd_tokens[0]=='help'):
-		help_menu()
-                return True
 
-	    ############## CLEAR
-	    if cmd_tokens[0] == 'clear':
-		os.system("clear")
-                return True
-
-    	    ############## QUIT
-            if (cmd_tokens[0]=="quit" or cmd_tokens[0]=="exit"):
-                sys.exit(1)
-
-            ##############
-            print "[*] you should use the command 'use' before doing anything else"
-            return True # to stay in the while loop in tha apt.py
-
-        ############## DEVICE NOT EMPTY
-        else:
-
-            if settings == 'hico':
-                dev.set_coercivity(dev.hico)
-
-            if settings == 'loco':
-                dev.set_coercivity(dev.loco)
-
-	    ############## HELP
-    	    if (cmd_tokens[0] == '?' or cmd_tokens[0]=='help'):
-		help_menu()
-                return True
-
-	    ############## CLEAR
-	    if cmd_tokens[0] == 'clear':
-		os.system("clear")
-                return True
-
-    	    ############## QUIT
-            if (cmd_tokens[0]=="quit" or cmd_tokens[0]=="exit"):
-                sys.exit(1)
-
-            ############ COMPARE
-            if cmd_tokens[0] == 'compare':
-                print "[*] swipe card to read, ^C to cancel"
-                if mode == 'iso':
-                    t1, t2, t3 = dev.read_tracks()
-                if mode == 'raw':
-                    t1, t2, t3 = dev.read_raw_tracks()
-                print "Track 1:", t1
-                print "Track 2:", t2
-                print "Track 3:", t3
-                print "[*] swipe card to compare, ^C to cancel"
-                if mode == 'iso':
-                    b1, b2, b3 = dev.read_tracks()
-                if mode == 'raw':
-                    b1, b2, b3 = dev.read_raw_tracks()
-                if b1 == t1 and b2 == t2 and t3 == t3:
-                    print "[+] Compare OK"
-                else:
-                    print "Track 1:", b1
-                    print "Track 2:", b2
-                    print "Track 3:", b3
-                    print "[-] Compare FAILED"
-
-                return True
-
-            ############ BULK COMPARE
-            if cmd_tokens[0] == 'bulk_compare':
-                print "[*] swipe card to read, ^C to cancel"
-                if mode == 'iso':
-                    t1, t2, t3 = dev.read_tracks()
-                if mode == 'raw':
-                    t1, t2, t3 = dev.read_raw_tracks()
-                print "Track 1:", t1
-                print "Track 2:", t2
-                print "Track 3:", t3
-                while True:
-                    print "[*] swipe card to compare, ^C to cancel"
-                    try:
-                        if mode == 'iso':
-                            b1, b2, b3 = dev.read_tracks()
-                        if mode == 'raw':
-                            b1, b2, b3 = dev.read_raw_tracks()
-                    except KeyboardInterrupt:
-                        break
-                    if b1 == t1 and b2 == t2 and t3 == t3:
-                        print "[+] Compare OK"
-                    else:
-                        print "Track 1:", b1
-                        print "Track 2:", b2
-                        print "Track 3:", b3
-                        print "[-] Compare FAILED"
-                return True 
-
-
-            ############# READ
-            if cmd_tokens[0] == 'read':
-                print "[*] swipe card to read, ^C to cancel"
-
-                if mode == 'iso':
-                    t1, t2, t3 = dev.read_tracks()
-                if mode == 'raw':
-                    t1, t2, t3 = dev.read_raw_tracks()
-
-                print "Track 1:", t1
-                print "Track 2:", t2
-                print "Track 3:", t3
-
-                if t1 == None:
-                    t1 = ''
-                if t2 == None:
-                    t2 = ''
-                if t3 == None:
-                    t3 = ''
-
-                saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
-
-                if jiraya.autoSave:
-                    filename = 'autosave'
-                    savedata(filename, './autosave', saveItToFile)
-
-                jiraya.Save = saveItToFile
-
-                return True
-
-            ############# BULK READ
-            if cmd_tokens[0] == 'bulk_read':
-                var_test = True
-                while var_test:
-                    print "[*] swipe card to read"
-                    if mode == 'iso':
-                        t1, t2, t3 = dev.read_tracks()
-                    if mode == 'raw':
-                        t1, t2, t3 = dev.read_raw_tracks()
-
-                    print "Track 1:", t1
-                    print "Track 2:", t2
-                    print "Track 3:", t3
-
-                    if t1 == None:
-                        t1 = ''
-                    if t2 == None:
-                        t2 = ''
-                    if t3 == None:
-                        t3 = ''
-
-                    saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
-
-                    if jiraya.autoSave:
-                        filename = 'autosave'
-                        savedata(filename, './autosave', saveItToFile)
-
-
-                    next = raw_input("continue? [Yes/no] ")
-
-                    if ((next.lower()=="y") or (next.lower()=="yes")):
-                        var_test = True
-                    else:
-                        var_test = False
-
-                return True
-                
-
-            ############# ERASE
-            if cmd_tokens[0] == 'erase':
-                print "[*] swipe card to erase all tracks"
-                dev.erase_tracks(t1=True, t2=True, t3=True)
-                print "[+] Erased."
-                return True
-
-            ############# COPY
-            if cmd_tokens[0] == 'copy':
-                print "[*] swipe card to read"
-                if mode == 'iso':
-                    t1, t2, t3 = dev.read_tracks()
-                if mode == 'raw':
-                    print('[-] cannot copy in raw mode yet, please use: mode iso')
-                    return True
-                print "Track 1:", t1
-                print "Track 2:", t2
-                print "Track 3:", t3
-                kwargs = {}
-                if t1 is not None:
-                    kwargs['t1'] = t1[1:-1]
-                if t2 is not None:
-                    kwargs['t2'] = t2[1:-1]
-                if t3 is not None:
-                    kwargs['t3'] = t3[1:-1]
-                print "[*] swipe card to write, ^C to cancel"
-                dev.write_tracks(**kwargs)
-                print "[+] Written."
-                return True
-
-            ############## BULK COPY
-            if cmd_tokens[0] == 'bulk_copy':
-                print "[*] swipe card to read, ^C to cancel"
-                if mode == 'iso':
-                    t1, t2, t3 = dev.read_tracks()
-                if mode == 'raw':
-                    print('[-] cannot copy in raw mode yet, please use: mode iso')
-                    return True
-                print "Track 1:", t1
-                print "Track 2:", t2
-                print "Track 3:", t3
-                kwargs = {}
-                if t1 is not None:
-                    kwargs['t1'] = t1[1:-1]
-                if t2 is not None:
-                    kwargs['t2'] = t2[1:-1]
-                if t3 is not None:
-                    kwargs['t3'] = t3[1:-1]
-
-                var_test = True
-                while var_test:
-                    try:
-                        print "[*] swipe card to write"
-                        dev.write_tracks(**kwargs)
-                        print "[+] Written."
-                    except Exception as e:
-                        print "[-] Failed. Error:", e
-
-                    next = raw_input("continue? [Yes/no] ")
-
-                    if ((next.lower()=="y") or (next.lower()=="yes")):
-                        var_test = True
-                    else:
-                        var_test = False
-                return True
-            
-            ############## WRITE
-            if cmd_tokens[0] == 'write':
-                print "[*] Input your data. Enter for not writing to a track."
-                kwargs = {}
-                print "Track 1:",
-                t1 = raw_input().strip()
-                print "Track 2:",
-                t2 = raw_input().strip()
-                print "Track 3:",
-                t3 = raw_input().strip()
-                if t1 != "":
-                    kwargs['t1'] = t1
-                if t2 != "":
-                    kwargs['t2'] = t2
-                if t3 != "":
-                    kwargs['t3'] = t3
-                print "[*] swipe card to write"
-                if mode == 'iso':
-                    dev.write_tracks(**kwargs)
-                if mode == 'raw':
-                    print('[-] cannot write in raw mode yet, please use: mode iso')
-                    return True
-                print "[+] Written."
-                return True
-            
-            ############## BULK WRITE
-            if cmd_tokens[0] == 'bulk_write':
-                print "[*] Input your data. Enter for not writing to a track."
-                kwargs = {}
-                print "Track 1:",
-                t1 = raw_input().strip()
-                print "Track 2:",
-                t2 = raw_input().strip()
-                print "Track 3:",
-                t3 = raw_input().strip()
-                if t1 != "":
-                    kwargs['t1'] = t1
-                if t2 != "":
-                    kwargs['t2'] = t2
-                if t3 != "":
-                    kwargs['t3'] = t3
-
-                var_test = True
-                while var_test:
-                    print "[*] swipe card to write"
-                    if mode == 'iso':
-                        dev.write_tracks(**kwargs)
-                    if mode == 'raw':
-                        print('[-] cannot write in raw mode yet, please use: mode iso')
-                        return True
-
-                    print "[+] Written."
-
-                    next = raw_input("continue? [Yes/no] ")
-
-                    if ((next.lower()=="y") or (next.lower()=="yes")):
-                        var_test = True
-                    else:
-                        var_test = False
-                return True
-
-            ############## SAVE
-            if cmd_tokens[0] == 'save':
-                if jiraya.Save != "":
-                    filename = raw_input("Filename: ")
-
-                    savedata(filename, './archives', jiraya.Save)
-
-                    jiraya.Save = ""
-                else:
-                    print "[*] You should read a card first"
-
-                return True
-
-            ############## AUTOSAVE
-            if ((cmd_tokens[0] == 'autosave') and (len(cmd_tokens)==2)):
-                if cmd_tokens[1] == "on":
+        elif cmd_tokens[1] == 'autosave':
+                if cmd_tokens[2] == "on":
                     jiraya.autoSave = True
-                elif cmd_tokens[1] == "off":
+                    print ' [+] autosave: on'
+                elif cmd_tokens[2] == "off":
                     jiraya.autoSave = False
-                elif cmd_tokens[1] == "status":
-                    print '[+] autosave = '+str(jiraya.autoSave)
-                else:
-                    print '[*] autosave '+cmd_tokens[1]+' does not exist'
-            elif ((cmd_tokens[0] == 'autosave') and (len(cmd_tokens)!=2)):
-                print '[*] autosave need an argument: on/off/status'
-
-                return True
-
-            ############## IF COMMAND DOES NOT EXIST
-            print "[*] that command does not exist"
+                    print ' [+] autosave: off'
+    
+        return True
+    
+    ############## HELP
+    if (cmd_tokens[0] == '?' or cmd_tokens[0]=='help'):
+        help_menu()
+        return True
+    
+    ############## CLEAR
+    if cmd_tokens[0] == 'clear':
+        os.system("clear")
+        return True
+    
+    ############## QUIT
+    if (cmd_tokens[0]=="quit" or cmd_tokens[0]=="exit"):
+        sys.exit(1)
+    
+    ############ COMPARE
+    if cmd_tokens[0] == 'compare':
+        print " [*] swipe card to read"
+        if track_type == 'iso':
+            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+        if track_type == 'raw':
+            t1, t2, t3 = test.read_raw_tracks(dev_ptr)
+        print " Track 1:", t1
+        print " Track 2:", t2
+        print " Track 3:", t3
+        print " [*] swipe card to compare"
+        if track_type == 'iso':
+            b1, b2, b3 = test.read_iso_tracks(dev_ptr)
+        if track_type == 'raw':
+            b1, b2, b3 = test.read_raw_tracks(dev_ptr)
+        if b1 == t1 and b2 == t2 and t3 == t3:
+            print " [+] Compare OK"
+        else:
+            print " Track 1:", b1
+            print " Track 2:", b2
+            print " Track 3:", b3
+            print " [-] Compare FAILED"
+    
+        return True
+    
+    ############ BULK COMPARE
+    if cmd_tokens[0] == 'bulk_compare':
+        print " [*] swipe card to read"
+        if mode == 'iso':
+            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+        if mode == 'raw':
+            t1, t2, t3 = test.read_raw_tracks(dev_ptr)
+        print " Track 1:", t1
+        print " Track 2:", t2
+        print " Track 3:", t3
+        while True:
+            print " [*] swipe card to compare"
+            try:
+                if track_type == 'iso':
+                    b1, b2, b3 = test.read_iso_tracks(dev_ptr)
+                if track_type == 'raw':
+                    b1, b2, b3 = test.read_raw_tracks(dev_ptr)
+            except KeyboardInterrupt:
+                break
+            if b1 == t1 and b2 == t2 and t3 == t3:
+                print " [+] Compare OK"
+            else:
+                print " Track 1:", b1
+                print " Track 2:", b2
+                print " Track 3:", b3
+                print " [-] Compare FAILED"
+        return True 
+    
+    
+    ############# READ
+    if cmd_tokens[0] == 'read':
+        print " [*] swipe card to read"
+    
+        if jiraya.track_type == 'iso':
+            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+        if jiraya.track_type == 'raw':
+            t1, t2, t3 = test.read_raw_tracks(dev_ptr)
+    
+        print " Track 1:", t1
+        print " Track 2:", t2
+        print " Track 3:", t3
+    
+        if t1 == None:
+            t1 = ''
+        if t2 == None:
+            t2 = ''
+        if t3 == None:
+            t3 = ''
+        
+        saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
+    
+        if jiraya.autoSave:
+            filename = 'autosave'
+            savedata(filename, './autosave', saveItToFile)
+    
+        jiraya.Save = saveItToFile
+    
+        return True
+    
+    ############# BULK READ
+    if cmd_tokens[0] == 'bulk_read':
+        var_test = True
+        while var_test:
+            print " [*] swipe card to read"
+            if jiraya.track_type == 'iso':
+                t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+            if jiraya.track_type == 'raw':
+                t1, t2, t3 = test.read_raw_tracks(dev_ptr)
+    
+            print " Track 1:", t1
+            print " Track 2:", t2
+            print " Track 3:", t3
+    
+            if t1 == None:
+                t1 = ''
+            if t2 == None:
+                t2 = ''
+            if t3 == None:
+                t3 = ''
+    
+            saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
+    
+            if jiraya.autoSave:
+                filename = 'autosave'
+                savedata(filename, './autosave', saveItToFile)
+    
+    
+            next = raw_input(" continue? [Yes/no] ")
+    
+            if ((next.lower()=="y") or (next.lower()=="yes")):
+                var_test = True
+            else:
+                var_test = False
+    
+        return True
+        
+    
+    ############# ERASE
+    if cmd_tokens[0] == 'erase':
+        print " [*] swipe card to erase all tracks"
+        test.erase_tracks(dev_ptr,t1=True, t2=True, t3=True)
+        print " [+] Erased."
+        return True
+    
+    ############# COPY
+    if cmd_tokens[0] == 'copy':
+        print " [*] swipe card to read"
+        if jiraya.track_type == 'iso':
+            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+        if jiraya.track_type == 'raw':
+            print(' [-] cannot copy in raw mode yet, please use: set type iso')
             return True
-            
+        print " Track 1:", t1
+        print " Track 2:", t2
+        print " Track 3:", t3
+        print " [*] swipe card to write, ^C to cancel"
+        
+        # to remove the start sentinel and the end sentinel
+        if t1!=None:
+            t1 = t1[1:-1]
+        if t2!=None:
+            t2 = t2[1:-1]
+        if t3!=None:
+            t3 = t3[1:-1]
+
+        if jiraya.track_type == 'iso':
+            res=test.write_iso_tracks(t1,t2,t3,dev_ptr)
+        if jiraya.track_type == 'raw':
+            #test.write_raw_tracks(**kwargs)
+            print(' [-] cannot copy in raw mode yet, please use: set type iso')
+            return True
+        if res:
+            print " [+] Written."
+        else:
+            print " [-] Not written"
+        return True
+    
+    ############## BULK COPY
+    if cmd_tokens[0] == 'bulk_copy':
+        print " [*] swipe card to read, ^C to cancel"
+        if jiraya.track_type == 'iso':
+            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+        if jiraya.track_type == 'raw':
+            print(' [-] cannot copy in raw mode yet, please use: set type iso')
+            return True
+        print " Track 1:", t1
+        print " Track 2:", t2
+        print " Track 3:", t3
+    
+        # to remove the start sentinel and the end sentinel
+        if t1!=None:
+            t1 = t1[1:-1]
+        if t2!=None:
+            t2 = t2[1:-1]
+        if t3!=None:
+            t3 = t3[1:-1]
+
+        var_test = True
+        while var_test:
+            try:
+                print " [*] swipe card to write"
+                res = test.write_iso_tracks(t1,t2,t3,dev_ptr)
+                if res:
+                    print " [+] Written."
+                else:
+                    print " [-] Not written"
+            except Exception as e:
+                print " [-] Failed. Error:", e
+    
+            next = raw_input(" [*] continue? [Yes/no] ")
+    
+            if ((next.lower()=="y") or (next.lower()=="yes")):
+                var_test = True
+            else:
+                var_test = False
+        return True
+    
+    ############## WRITE
+    if cmd_tokens[0] == 'write':
+        print " [*] Input your data. Enter for not writing to a track."
+        print " Track 1:",
+        t1 = raw_input().strip()
+        print " Track 2:",
+        t2 = raw_input().strip()
+        print " Track 3:",
+        t3 = raw_input().strip()
+        print " [*] swipe card to write"
+        if jiraya.track_type == 'iso':
+            res = test.write_iso_tracks(t1,t2,t3,dev_ptr)
+        if jiraya.track_type == 'raw':
+            #test.write_raw_tracks(1,t2,t3,dev_ptr)
+            print(' [-] cannot write in raw mode yet, please: set type iso')
+            return True
+        if res:
+            print " [+] Written."
+        else:
+            print " [-] Not written"
+        return True
+    
+    ############## BULK WRITE
+    if cmd_tokens[0] == 'bulk_write':
+        print " [*] Input your data. Enter for not writing to a track."
+        print " Track 1:",
+        t1 = raw_input().strip()
+        print " Track 2:",
+        t2 = raw_input().strip()
+        print " Track 3:",
+        t3 = raw_input().strip()
+    
+        var_test = True
+        while var_test:
+            print " [*] swipe card to write"
+            if jiraya.track_type == 'iso':
+                res = test.write_iso_tracks(t1,t2,t3,dev_ptr)
+            if jiraya.track_type == 'raw':
+                #test.write_raw_tracks(t1,t2,t3,dev_ptr)
+                print(' [-] cannot write in raw mode yet, please: set type iso')
+                return True
+    
+            if res:
+                print " [+] Written."
+            else:
+                print " [-] Not written"
+    
+            next = raw_input(" [*] continue? [Yes/no] ")
+    
+            if ((next.lower()=="y") or (next.lower()=="yes")):
+                var_test = True
+            else:
+                var_test = False
+        return True
+    
+    ############## SAVE
+    if cmd_tokens[0] == 'save':
+        if jiraya.Save != "":
+            filename = raw_input(" Filename: ")
+    
+            savedata(filename, './archives', jiraya.Save)
+    
+            jiraya.Save = ""
+        else:
+            print " [*] You should read a card first"
+    
+        return True
+    
+    ############## USE
+    if cmd_tokens[0] == 'use':
+        dev_ptr = test.msr_init(cmd_tokens[1],dev_ptr)
+        test.msr_reset()
+        return True
+    
+    ############## PLAY
+    if ((cmd_tokens[0] == 'play') and (cmd_tokens[2] == 'led')):
+        if cmd_tokens[3] == 'on':
+            if cmd_tokens[1] == 'all':
+                test.play_all_led_on(dev_ptr)
+            elif cmd_tokens[1] == "g":
+                test.play_green_led_on(dev_ptr)
+            elif cmd_tokens[1] == "y":
+                test.play_yellow_led_on(dev_ptr)
+            elif cmd_tokens[1] == "r":
+                test.play_red_led_on(dev_ptr)
+            else:
+                print ' [-] that led color does not exist (g,y,r,all)'
+
+        elif cmd_tokens[3] == 'off':
+            test.play_all_led_off(dev_ptr)
+
+        else:
+            print ' [-] that status does not exist (on,off)'
+        return True
+
+
+    ############## IF COMMAND DOES NOT EXIST
+    print " [*] that command does not exist"
+    return True
+                
