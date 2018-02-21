@@ -71,6 +71,7 @@ def help_menu():
 	print " clear\t\t\t clear the screen"
         print " settings\t\t display current settings"
         print " use /dev/ttyUSB0\t look at dmesg"
+        print " reset\t\t\t reset to default config"
 	print "="*23+"ACTIONS"+"="*30
         print " compare/bulk_compare"
         print " copy/bulk_copy"
@@ -276,7 +277,7 @@ def execute(cmd_tokens, dev_ptr):
         if jiraya.track_type == 'iso':
             t1, t2, t3 = test.read_iso_tracks(dev_ptr)
         if jiraya.track_type == 'raw':
-            t1, t2, t3 = test.read_raw_tracks(dev_ptr)
+            t1, t2, t3 = test.read_raw_tracks(dev_ptr, jiraya.bpc)
     
         print " Track 1:", t1
         print " Track 2:", t2
@@ -512,6 +513,13 @@ def execute(cmd_tokens, dev_ptr):
             print ' [-] that status does not exist (on,off)'
         return True
 
+
+    if cmd_tokens[0] == "reset":
+        test.msr_reset(dev_ptr)
+        test.set_coercivity("hico",dev_ptr)
+        test.set_bpc(int(bpc[0]), int(bpc[1]), int(bpc[2]),dev_ptr)
+        jiraya.type = "iso"
+        return True
 
     ############## IF COMMAND DOES NOT EXIST
     print " [*] that command does not exist"

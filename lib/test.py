@@ -91,9 +91,14 @@ map_7bits = {   "0000001": ["00", " "],
 
 def msr_init(dev_path):
     try:
-        print " [+] device initialisation: OK"
-        return serial.Serial(dev_path,9600,8,serial.PARITY_NONE,timeout=0)
+        res = serial.Serial(dev_path,9600,8,serial.PARITY_NONE,timeout=0)
     except:
+        res = None
+
+    if res != None:
+        print " [+] device initialisation: OK"
+        return res
+    else:
         print " [-] device initialisation: KO"
         return False
 
@@ -152,7 +157,7 @@ def set_bpc(bpc1, bpc2, bpc3,dev_ptr):
         return False
     print " [+] set bpc: OK"
 
-def read_raw_tracks(dev_ptr):
+def read_raw_tracks(dev_ptr, bpc):
     status, _, data = execute_waitresult("\x6D",dev_ptr) # m : read raw data
     #data = map_7bits[0]
     if status != "0":
@@ -160,7 +165,7 @@ def read_raw_tracks(dev_ptr):
         #raise Exception(" [-] read_raw_tracks() error: %c" % status)
         return "","",""
     #return data
-    return decode_rawdatablock(data)
+    return decode_rawdatablock(data, bpc)
 
 def read_iso_tracks(dev_ptr):
     status, _, data = execute_waitresult("\x72",dev_ptr) # r
@@ -170,7 +175,7 @@ def read_iso_tracks(dev_ptr):
         #raise Exception(" [-] read_iso_tracks() error: %c" % status)
     return decode_isodatablock(data)
 
-def decode_rawdatablock(data):
+def decode_rawdatablock(data, bpc):
     # header
     if data[0:4] != "\x1B\x73\x1B\x01":
         print(" [-] bad datablock : don't start with 1B 73 1B 01", data)
@@ -181,6 +186,7 @@ def decode_rawdatablock(data):
     strip1_start = 4
     strip1_end = strip1_start + 1 + ord(data[strip1_start]) # first byte is length
     strip1 = data[strip1_start+1:strip1_end]
+        
 
     # second strip
     strip2_start = strip1_end+2
@@ -191,6 +197,8 @@ def decode_rawdatablock(data):
 
     strip2_end = strip2_start + 1 + ord(data[strip2_start])
     strip2 = data[strip2_start+1:strip2_end]
+    #if bpc[1] == '5':
+        
     
     # third strip
     strip3_start = strip2_end+2
