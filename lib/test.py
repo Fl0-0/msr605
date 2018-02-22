@@ -157,7 +157,7 @@ def set_bpc(bpc1, bpc2, bpc3,dev_ptr):
         return False
     print " [+] set bpc: OK"
 
-def read_raw_tracks(dev_ptr, bpc):
+def read_raw_tracks(dev_ptr):
     status, _, data = execute_waitresult("\x6D",dev_ptr) # m : read raw data
     #data = map_7bits[0]
     if status != "0":
@@ -165,7 +165,7 @@ def read_raw_tracks(dev_ptr, bpc):
         #raise Exception(" [-] read_raw_tracks() error: %c" % status)
         return "","",""
     #return data
-    return decode_rawdatablock(data, bpc)
+    return decode_rawdatablock(data)
 
 def read_iso_tracks(dev_ptr):
     status, _, data = execute_waitresult("\x72",dev_ptr) # r
@@ -175,7 +175,8 @@ def read_iso_tracks(dev_ptr):
         #raise Exception(" [-] read_iso_tracks() error: %c" % status)
     return decode_isodatablock(data)
 
-def decode_rawdatablock(data, bpc):
+def decode_rawdatablock(data):
+
     # header
     if data[0:4] != "\x1B\x73\x1B\x01":
         print(" [-] bad datablock : don't start with 1B 73 1B 01", data)
@@ -186,7 +187,7 @@ def decode_rawdatablock(data, bpc):
     strip1_start = 4
     strip1_end = strip1_start + 1 + ord(data[strip1_start]) # first byte is length
     strip1 = data[strip1_start+1:strip1_end]
-        
+    strip1hex = map(hex,bytearray(strip1))
 
     # second strip
     strip2_start = strip1_end+2
@@ -197,7 +198,7 @@ def decode_rawdatablock(data, bpc):
 
     strip2_end = strip2_start + 1 + ord(data[strip2_start])
     strip2 = data[strip2_start+1:strip2_end]
-    #if bpc[1] == '5':
+    strip2hex = map(hex,bytearray(strip2))
         
     
     # third strip
@@ -209,6 +210,7 @@ def decode_rawdatablock(data, bpc):
 
     strip3_end = strip3_start + 1 + ord(data[strip3_start])
     strip3 = data[strip3_start+1:strip3_end]
+    strip3hex = map(hex,bytearray(strip3))
 
     # trailer
     if data[strip3_end:] != "\x3F"+"\x1C":
@@ -216,7 +218,7 @@ def decode_rawdatablock(data, bpc):
         #raise Exception("bad datablock : missing 3F 1C at position %d", strip3_end, data)
         return "","",""
             
-    return strip1, strip2, strip3
+    return strip1, strip2, strip3, strip1hex, strip2hex, strip3hex
 
 def decode_isodatablock(data):
     # header and end
@@ -349,19 +351,25 @@ def set_bpi(bpi1, bpi2, bpi3,dev_ptr):
             #raise Exception(" [-] set_bpi() error: %c for %s" % (status,hex(m)))
 
 def get_device_model(dev_ptr):
-    #result = dev_ptr.write("\x1B"+"\x74") # escape_code = \x1B
-    #time.sleep(0.1)
-    status, result, blop = execute_waitresult("\x1B\x74")
-    if result != "0":
-        return str(blop)
+    result = dev_ptr.write("\x1B"+"\x74") # escape_code = \x1B
+    status = dev_ptr.read().decode()
+    time.sleep(0.1)
+    #status, result, blop = execute_waitresult("\x1B\x74", dev_ptr)
+    if status != "0":
+        return str(status)
     else:
         return ''
 
 def get_firmware_version(dev_ptr):
-    result = dev_ptr.write("\x1B\x76") # escape_code = \x1B
-    time.sleep(0.1)
+    dev_ptr.write("\x1B\x76") # escape_code = \x1B
+    result = dev_ptr.read()
+    print map(hex,bytearray(result))
+    #pos = result.rindex("\x1B")
+    #status = result[pos+1]
+    #res = result[pos+2:]
+    #data = result[0:pos]
     if result != "0":
-        return str(result)
+        return "oups"#str(result)
     else:
         return ''
 
