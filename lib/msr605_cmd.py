@@ -136,17 +136,22 @@ def verifyEmptyTrack(t1,t2,t3):
     return t1,t2,t3
 
 def printTracks(track1, track2, track3):
-    print(Fore.GREEN+" [1-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track1))))
-    print(Fore.GREEN+" [2-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track2))))
-    print(Fore.GREEN+" [3-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track3))))
-    print("")
-    print(Fore.GREEN+" [1-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track1))))
-    print(Fore.GREEN+" [2-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track2))))
-    print(Fore.GREEN+" [3-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track3))))
-    print("")
-    print(Fore.GREEN+" [1-ascii]: "+Fore.RESET+track1)
-    print(Fore.GREEN+" [2-ascii]: "+Fore.RESET+track2)
-    print(Fore.GREEN+" [3-ascii]: "+Fore.RESET+track3)
+    if jiraya.track_type == 'raw':
+        print(Fore.GREEN+" [1-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track1))))
+        print(Fore.GREEN+" [2-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track2))))
+        print(Fore.GREEN+" [3-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track3))))
+        print("")
+        print(Fore.GREEN+" [1-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track1))))
+        print(Fore.GREEN+" [2-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track2))))
+        print(Fore.GREEN+" [3-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track3))))
+        print("")
+        print(Fore.GREEN+" [1-ascii]: "+Fore.RESET+track1)
+        print(Fore.GREEN+" [2-ascii]: "+Fore.RESET+track2)
+        print(Fore.GREEN+" [3-ascii]: "+Fore.RESET+track3)
+    if jiraya.track_type == 'iso':
+        print(Fore.GREEN+" [1-ascii]: "+Fore.RESET+track1)
+        print(Fore.GREEN+" [2-ascii]: "+Fore.RESET+track2)
+        print(Fore.GREEN+" [3-ascii]: "+Fore.RESET+track3)
 
 def execute(cmd_tokens, dev_ptr):
     import msr605_drv
@@ -163,8 +168,8 @@ def execute(cmd_tokens, dev_ptr):
         #status = msr605_drv.get_hico_loco_status(dev_ptr)
         model = msr605_drv.get_device_model(dev_ptr)
         firmware = msr605_drv.get_firmware_version(dev_ptr)
-        comm = msr605_drv.do_communication_msr605_drv(dev_ptr)
-        ram = msr605_drv.do_ram_msr605_drv(dev_ptr)
+        #comm = msr605_drv.do_communication_msr605_drv(dev_ptr)
+        #ram = msr605_drv.do_ram_msr605_drv(dev_ptr)
         i = 60
         print "="*i
         print ' write mode: '+jiraya.mode

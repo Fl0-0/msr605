@@ -360,7 +360,7 @@ def get_device_model(dev_ptr):
 def get_firmware_version(dev_ptr):
     dev_ptr.write("\x1B\x76") # escape_code = \x1B
     result = dev_ptr.read()
-    print map(hex,bytearray(result))
+    #print map(hex,bytearray(result))
     #pos = result.rindex("\x1B")
     #status = result[pos+1]
     #res = result[pos+2:]
