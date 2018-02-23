@@ -122,9 +122,9 @@ def savedata(filename, folder, data):
         result = False
 
     if result:
-        print "[+] Saved to "+folder+"/"+filename+"_"+timestamp
+        print " [+] Saved to "+folder+"/"+filename+"_"+timestamp
     else:
-        print "[-] Error during saving"
+        print " [-] Error during saving"
 
 def verifyEmptyTrack(t1,t2,t3):
     if t1 == None:
@@ -332,7 +332,7 @@ def execute(cmd_tokens, dev_ptr):
     
         if jiraya.autoSave:
             filename = 'autosave'
-            savedata(filename, './autosave', saveItToFile)
+            savedata(filename, os.path.normpath(os.path.dirname(os.path.abspath(__file__)) + '/../autosave'), saveItToFile)
     
         jiraya.Save = saveItToFile
     
@@ -508,7 +508,7 @@ def execute(cmd_tokens, dev_ptr):
         if jiraya.Save != "":
             filename = raw_input(" Filename: ")
     
-            savedata(filename, './archives', jiraya.Save)
+            savedata(filename, os.path.normpath(os.path.dirname(os.path.abspath(__file__)) + '/../archives'), jiraya.Save)
     
             jiraya.Save = ""
         else:
