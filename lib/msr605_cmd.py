@@ -5,7 +5,7 @@ import serial
 from os.path import isfile, join
 from os import listdir
 import colorama
-from colorama import Back, Back
+from colorama import Fore, Back
 #import msr605_drv
 sys.path.insert(0,'../')
 import jiraya
@@ -126,9 +126,30 @@ def savedata(filename, folder, data):
     else:
         print "[-] Error during saving"
 
+def verifyEmptyTrack(t1,t2,t3):
+    if t1 == None:
+        t1 = ''
+    if t2 == None:
+        t2 = ''
+    if t3 == None:
+        t3 = ''
+    return t1,t2,t3
+
+def printTracks(track1, track2, track3):
+    print(Fore.GREEN+" [1-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track1))))
+    print(Fore.GREEN+" [2-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track2))))
+    print(Fore.GREEN+" [3-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track3))))
+    print("")
+    print(Fore.GREEN+" [1-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track1))))
+    print(Fore.GREEN+" [2-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track2))))
+    print(Fore.GREEN+" [3-hexa]: "+Fore.RESET+get_hex_value(map(hex,bytearray(track3))))
+    print("")
+    print(Fore.GREEN+" [1-ascii]: "+Fore.RESET+track1)
+    print(Fore.GREEN+" [2-ascii]: "+Fore.RESET+track2)
+    print(Fore.GREEN+" [3-ascii]: "+Fore.RESET+track3)
 
 def execute(cmd_tokens, dev_ptr):
-    import test
+    import msr605_drv
     """
     	execute the command+args
     	command: cmd_tokens[0]
@@ -139,11 +160,11 @@ def execute(cmd_tokens, dev_ptr):
 
     ############# SETTINGS
     if cmd_tokens[0] == 'settings':
-        #status = test.get_hico_loco_status(dev_ptr)
-        model = test.get_device_model(dev_ptr)
-        firmware = test.get_firmware_version(dev_ptr)
-        comm = test.do_communication_test(dev_ptr)
-        ram = test.do_ram_test(dev_ptr)
+        #status = msr605_drv.get_hico_loco_status(dev_ptr)
+        model = msr605_drv.get_device_model(dev_ptr)
+        firmware = msr605_drv.get_firmware_version(dev_ptr)
+        comm = msr605_drv.do_communication_msr605_drv(dev_ptr)
+        ram = msr605_drv.do_ram_msr605_drv(dev_ptr)
         i = 60
         print "="*i
         print ' write mode: '+jiraya.mode
@@ -164,10 +185,10 @@ def execute(cmd_tokens, dev_ptr):
         if cmd_tokens[1] == 'mode':
             if cmd_tokens[2] == 'hico':
                 jiraya.mode = 'hico'
-                test.set_coercivity('hico',dev_ptr)
+                msr605_drv.set_coercivity('hico',dev_ptr)
             elif cmd_tokens[2] == 'loco':
                 jiraya.mode = 'loco'
-                test.set_coercivity('loco',dev_ptr)
+                msr605_drv.set_coercivity('loco',dev_ptr)
             else:
                 print(' [*] this mode does not exist')
                 print(' [*] try: hico or loco')
@@ -190,7 +211,7 @@ def execute(cmd_tokens, dev_ptr):
             jiraya.bpc[0] = bpc_value[0]
             jiraya.bpc[1] = bpc_value[1]
             jiraya.bpc[2] = bpc_value[2]
-            test.set_bpc(int(jiraya.bpc[0]), int(jiraya.bpc[1]), int(jiraya.bpc[2]))
+            msr605_drv.set_bpc(int(jiraya.bpc[0]), int(jiraya.bpc[1]), int(jiraya.bpc[2]))
             print ' [+] bpc '+cmd_tokens[2]+": OK"
     
         elif cmd_tokens[1] == "bpi":
@@ -206,7 +227,7 @@ def execute(cmd_tokens, dev_ptr):
                 jiraya.bpi[2] = cmd_tokens[3]
             else:
                 print " [*] usage: set bpi <1,2,3,all> <210,75>"
-            test.set_bpi(jiraya.bpi[0], jiraya.bpi[1], jiraya.bpi[2], dev_ptr)
+            msr605_drv.set_bpi(jiraya.bpi[0], jiraya.bpi[1], jiraya.bpi[2], dev_ptr)
             print " [+] bpi to track "+cmd_tokens[2]+" set to "+cmd_tokens[3]+": OK"
 
 
@@ -241,32 +262,23 @@ def execute(cmd_tokens, dev_ptr):
     if cmd_tokens[0] == 'compare':
         print " [*] swipe card to read"
         if jiraya.track_type == 'iso':
-            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+            t1, t2, t3 = msr605_drv.read_iso_tracks(dev_ptr)
         if jiraya.track_type == 'raw':
-            t1, t2, t3,t1h,t2h,t3h = test.read_raw_tracks(dev_ptr)
-            print " [1h]:",get_hex_value(t1h)
-            print " [2h]:",get_hex_value(t2h)
-            print " [3h]:",get_hex_value(t3h)
+            t1, t2, t3 = msr605_drv.read_raw_tracks(dev_ptr)
 
-        print "\n"
-        print " [1]:", t1
-        print " [2]:", t2
-        print " [3]:", t3
+        t1,t2,t3 = verifyEmptyTrack(t1,t2,t3) 
+        printTracks(t1,t2,t3)
+
         print " [*] swipe card to compare"
         if jiraya.track_type == 'iso':
-            b1, b2, b3 = test.read_iso_tracks(dev_ptr)
+            b1, b2, b3 = msr605_drv.read_iso_tracks(dev_ptr)
         if jiraya.track_type == 'raw':
-            b1, b2, b3,b1h,b2h,b3h = test.read_raw_tracks(dev_ptr)
+            b1, b2, b3 = msr605_drv.read_raw_tracks(dev_ptr)
         if b1 == t1 and b2 == t2 and t3 == t3:
             print " [+] Compare OK"
         else:
-            print " [1h]:",get_hex_value(b1h)
-            print " [2h]:",get_hex_value(b2h)
-            print " [3h]:",get_hex_value(b3h)
-            print "\n"
-            print " [1]:", b1
-            print " [2]:", b2
-            print " [3]:", b3
+            b1,b2,b3 = verifyEmptyTrack(b1,b2,b3) 
+            printTracks(b1,b2,b3)
             print " [-] Compare FAILED"
     
         return True
@@ -275,36 +287,26 @@ def execute(cmd_tokens, dev_ptr):
     if cmd_tokens[0] == 'bulk_compare':
         print " [*] swipe card to read"
         if jiraya.track_type == 'iso':
-            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+            t1, t2, t3 = msr605_drv.read_iso_tracks(dev_ptr)
         if jiraya.track_type == 'raw':
-            t1, t2, t3, t1h, t2h, t3h = test.read_raw_tracks(dev_ptr)
-            print " [1h]:",get_hex_value(t1h)
-            print " [2h]:",get_hex_value(t2h)
-            print " [3h]:",get_hex_value(t3h)
+            t1, t2, t3 = msr605_drv.read_raw_tracks(dev_ptr)
 
-        print "\n"
-        print " [1]:", t1
-        print " [2]:", t2
-        print " [3]:", t3
+        t1,t2,t3 = verifyEmptyTrack(t1,t2,t3) 
+        printTracks(t1,t2,t3)
         while True:
             print " [*] swipe card to compare"
             try:
                 if jiraya.track_type == 'iso':
-                    b1, b2, b3 = test.read_iso_tracks(dev_ptr)
+                    b1, b2, b3 = msr605_drv.read_iso_tracks(dev_ptr)
                 if jiraya.track_type == 'raw':
-                    b1, b2, b3, b1h, b2h, b3h = test.read_raw_tracks(dev_ptr)
+                    b1, b2, b3 = msr605_drv.read_raw_tracks(dev_ptr)
             except KeyboardInterrupt:
                 break
             if b1 == t1 and b2 == t2 and t3 == t3:
                 print " [+] Compare OK"
             else:
-                print " [1h]:",get_hex_value(b1h)
-                print " [2h]:",get_hex_value(b2h)
-                print " [3h]:",get_hex_value(b3h)
-                print "\n"
-                print " [1]:", b1
-                print " [2]:", b2
-                print " [3]:", b3
+                b1,b2,b3 = verifyEmptyTrack(b1,b2,b3) 
+                printTracks(b1,b2,b3)
                 print " [-] Compare FAILED"
         return True 
     
@@ -314,25 +316,13 @@ def execute(cmd_tokens, dev_ptr):
         print " [*] swipe card to read"
     
         if jiraya.track_type == 'iso':
-            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+            t1, t2, t3 = msr605_drv.read_iso_tracks(dev_ptr)
         if jiraya.track_type == 'raw':
-            t1, t2, t3, t1h, t2h, t3h = test.read_raw_tracks(dev_ptr)
-            print " [1h]:",get_hex_value(t1h)
-            print " [2h]:",get_hex_value(t2h)
-            print " [3h]:",get_hex_value(t3h)
-    
-        print "\n"
-        print " [1]:", t1
-        print " [2]:", t2
-        print " [3]:", t3
-    
-        if t1 == None:
-            t1 = ''
-        if t2 == None:
-            t2 = ''
-        if t3 == None:
-            t3 = ''
-        
+            t1, t2, t3 = msr605_drv.read_raw_tracks(dev_ptr)
+
+        t1,t2,t3 = verifyEmptyTrack(t1,t2,t3) 
+        printTracks(t1,t2,t3)
+
         saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
     
         if jiraya.autoSave:
@@ -345,29 +335,17 @@ def execute(cmd_tokens, dev_ptr):
     
     ############# BULK READ
     if cmd_tokens[0] == 'bulk_read':
-        var_test = True
-        while var_test:
+        var_msr605_drv = True
+        while var_msr605_drv:
             print " [*] swipe card to read"
             if jiraya.track_type == 'iso':
-                t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+                t1, t2, t3 = msr605_drv.read_iso_tracks(dev_ptr)
             if jiraya.track_type == 'raw':
-                t1, t2, t3, t1h, t2h, t3h = test.read_raw_tracks(dev_ptr)
-                print " [1h]:",get_hex_value(t1h)
-                print " [2h]:",get_hex_value(t2h)
-                print " [3h]:",get_hex_value(t3h)
-    
-            print "\n"
-            print " [1]:", t1
-            print " [2]:", t2
-            print " [3]:", t3
-    
-            if t1 == None:
-                t1 = ''
-            if t2 == None:
-                t2 = ''
-            if t3 == None:
-                t3 = ''
-    
+                t1, t2, t3 = msr605_drv.read_raw_tracks(dev_ptr)
+
+            t1,t2,t3 = verifyEmptyTrack(t1,t2,t3) 
+            printTracks(t1,t2,t3)
+
             saveItToFile = 'track1:'+t1+'\n'+'track2:'+t2+'\n'+'track3:'+t3+'\n'
     
             if jiraya.autoSave:
@@ -378,9 +356,9 @@ def execute(cmd_tokens, dev_ptr):
             next = raw_input(" continue? [Yes/no] ")
     
             if ((next.lower()=="y") or (next.lower()=="yes")):
-                var_test = True
+                var_msr605_drv = True
             else:
-                var_test = False
+                var_msr605_drv = False
     
         return True
         
@@ -388,7 +366,7 @@ def execute(cmd_tokens, dev_ptr):
     ############# ERASE
     if cmd_tokens[0] == 'erase':
         print " [*] swipe card to erase all tracks"
-        test.erase_tracks(dev_ptr,t1=True, t2=True, t3=True)
+        msr605_drv.erase_tracks(dev_ptr,t1=True, t2=True, t3=True)
         print " [+] Erased."
         return True
     
@@ -396,13 +374,13 @@ def execute(cmd_tokens, dev_ptr):
     if cmd_tokens[0] == 'copy':
         print " [*] swipe card to read"
         if jiraya.track_type == 'iso':
-            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+            t1, t2, t3 = msr605_drv.read_iso_tracks(dev_ptr)
         if jiraya.track_type == 'raw':
             print(' [-] cannot copy in raw mode yet, please use: set type iso')
             return True
-        print " [1]:", t1
-        print " [2]:", t2
-        print " [3]:", t3
+
+        t1,t2,t3 = verifyEmptyTrack(t1,t2,t3) 
+        printTracks(t1,t2,t3)
         print " [*] swipe card to write, ^C to cancel"
         
         # to remove the start sentinel and the end sentinel
@@ -414,9 +392,9 @@ def execute(cmd_tokens, dev_ptr):
             t3 = t3[1:-1]
 
         if jiraya.track_type == 'iso':
-            res=test.write_iso_tracks(t1,t2,t3,dev_ptr)
+            res=msr605_drv.write_iso_tracks(t1,t2,t3,dev_ptr)
         if jiraya.track_type == 'raw':
-            #test.write_raw_tracks(**kwargs)
+            #msr605_drv.write_raw_tracks(**kwargs)
             print(' [-] cannot copy in raw mode yet, please use: set type iso')
             return True
         if res:
@@ -429,13 +407,13 @@ def execute(cmd_tokens, dev_ptr):
     if cmd_tokens[0] == 'bulk_copy':
         print " [*] swipe card to read, ^C to cancel"
         if jiraya.track_type == 'iso':
-            t1, t2, t3 = test.read_iso_tracks(dev_ptr)
+            t1, t2, t3 = msr605_drv.read_iso_tracks(dev_ptr)
         if jiraya.track_type == 'raw':
             print(' [-] cannot copy in raw mode yet, please use: set type iso')
             return True
-        print " [1]:", t1
-        print " [2]:", t2
-        print " [3]:", t3
+
+        t1,t2,t3 = verifyEmptyTrack(t1,t2,t3) 
+        printTracks(t1,t2,t3)
     
         # to remove the start sentinel and the end sentinel
         if t1!=None:
@@ -445,11 +423,11 @@ def execute(cmd_tokens, dev_ptr):
         if t3!=None:
             t3 = t3[1:-1]
 
-        var_test = True
-        while var_test:
+        var_msr605_drv = True
+        while var_msr605_drv:
             try:
                 print " [*] swipe card to write"
-                res = test.write_iso_tracks(t1,t2,t3,dev_ptr)
+                res = msr605_drv.write_iso_tracks(t1,t2,t3,dev_ptr)
                 if res:
                     print " [+] Written."
                 else:
@@ -460,9 +438,9 @@ def execute(cmd_tokens, dev_ptr):
             next = raw_input(" [*] continue? [Yes/no] ")
     
             if ((next.lower()=="y") or (next.lower()=="yes")):
-                var_test = True
+                var_msr605_drv = True
             else:
-                var_test = False
+                var_msr605_drv = False
         return True
     
     ############## WRITE
@@ -476,9 +454,9 @@ def execute(cmd_tokens, dev_ptr):
         t3 = raw_input().strip()
         print " [*] swipe card to write"
         if jiraya.track_type == 'iso':
-            res = test.write_iso_tracks(t1,t2,t3,dev_ptr)
+            res = msr605_drv.write_iso_tracks(t1,t2,t3,dev_ptr)
         if jiraya.track_type == 'raw':
-            #test.write_raw_tracks(1,t2,t3,dev_ptr)
+            #msr605_drv.write_raw_tracks(1,t2,t3,dev_ptr)
             print(' [-] cannot write in raw mode yet, please: set type iso')
             return True
         if res:
@@ -497,13 +475,13 @@ def execute(cmd_tokens, dev_ptr):
         print " Track 3:",
         t3 = raw_input().strip()
     
-        var_test = True
-        while var_test:
+        var_msr605_drv = True
+        while var_msr605_drv:
             print " [*] swipe card to write"
             if jiraya.track_type == 'iso':
-                res = test.write_iso_tracks(t1,t2,t3,dev_ptr)
+                res = msr605_drv.write_iso_tracks(t1,t2,t3,dev_ptr)
             if jiraya.track_type == 'raw':
-                #test.write_raw_tracks(t1,t2,t3,dev_ptr)
+                #msr605_drv.write_raw_tracks(t1,t2,t3,dev_ptr)
                 print(' [-] cannot write in raw mode yet, please: set type iso')
                 return True
     
@@ -515,9 +493,9 @@ def execute(cmd_tokens, dev_ptr):
             next = raw_input(" [*] continue? [Yes/no] ")
     
             if ((next.lower()=="y") or (next.lower()=="yes")):
-                var_test = True
+                var_msr605_drv = True
             else:
-                var_test = False
+                var_msr605_drv = False
         return True
     
     ############## SAVE
@@ -537,18 +515,18 @@ def execute(cmd_tokens, dev_ptr):
     if ((cmd_tokens[0] == 'play') and (cmd_tokens[2] == 'led')):
         if cmd_tokens[3] == 'on':
             if cmd_tokens[1] == 'all':
-                test.play_all_led_on(dev_ptr)
+                msr605_drv.play_all_led_on(dev_ptr)
             elif cmd_tokens[1] == "g":
-                test.play_green_led_on(dev_ptr)
+                msr605_drv.play_green_led_on(dev_ptr)
             elif cmd_tokens[1] == "y":
-                test.play_yellow_led_on(dev_ptr)
+                msr605_drv.play_yellow_led_on(dev_ptr)
             elif cmd_tokens[1] == "r":
-                test.play_red_led_on(dev_ptr)
+                msr605_drv.play_red_led_on(dev_ptr)
             else:
                 print ' [-] that led color does not exist (g,y,r,all)'
 
         elif cmd_tokens[3] == 'off':
-            test.play_all_led_off(dev_ptr)
+            msr605_drv.play_all_led_off(dev_ptr)
 
         else:
             print ' [-] that status does not exist (on,off)'
@@ -556,9 +534,9 @@ def execute(cmd_tokens, dev_ptr):
 
     ############# RESET
     if cmd_tokens[0] == "reset":
-        test.msr_reset(dev_ptr)
-        test.set_coercivity("hico",dev_ptr)
-        test.set_bpc(int(jiraya.bpc[0]), int(jiraya.bpc[1]), int(jiraya.bpc[2]),dev_ptr)
+        msr605_drv.msr_reset(dev_ptr)
+        msr605_drv.set_coercivity("hico",dev_ptr)
+        msr605_drv.set_bpc(int(jiraya.bpc[0]), int(jiraya.bpc[1]), int(jiraya.bpc[2]),dev_ptr)
         jiraya.track_type = "iso"
         return True
 
