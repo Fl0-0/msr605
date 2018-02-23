@@ -310,6 +310,7 @@ def execute(cmd_tokens, dev_ptr):
         print ' bpi1: '+jiraya.bpi[0]+"\t bpi2: "+jiraya.bpi[1]+"\t bpi3: "+jiraya.bpi[2]
         print ' autosave: '+ str(jiraya.autoSave)
         print "="*i
+        print ' device location: '+jiraya.tty
         print ' device model: '+model
         print ' firmare version: '+firmware
         #print ' RAM: '+ram

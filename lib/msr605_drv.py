@@ -351,7 +351,7 @@ def set_bpi(bpi1, bpi2, bpi3,dev_ptr):
 
 def get_device_model(dev_ptr):
     result = dev_ptr.write("\x1B"+"\x74") # escape_code = \x1B
-    status = dev_ptr.read().decode()
+    status = dev_ptr.read()
     time.sleep(0.1)
     #status, result, blop = execute_waitresult("\x1B\x74", dev_ptr)
     if status != "0":

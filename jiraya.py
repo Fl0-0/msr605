@@ -26,7 +26,7 @@ def optionsManager():
 
     return opt
 
-global Save, autoSave, bpc, bpi, mode, track_type, dev_ptr
+global Save, autoSave, bpc, bpi, mode, track_type, dev_ptr, tty
 
 options = optionsManager()
 
@@ -42,6 +42,10 @@ if options.TYPE is not None:
     track_type = options.TYPE
 else:
     track_type = 'iso'
+if options.DEV is not None:
+    tty = options.DEV
+else:
+    tty = "/dev/ttyUSB0"
 
 
 def tokenize(string):
