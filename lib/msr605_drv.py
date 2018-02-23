@@ -129,7 +129,7 @@ def execute_waitresult(command, dev_ptr, timeout=10):
     dev_ptr.timeout = 0
 
     result += dev_ptr.read(1000)
-    
+  
     # parse result : status, result, data
     pos = result.rindex("\x1B")
     status = result[pos+1]
@@ -223,7 +223,7 @@ def decode_isodatablock(data):
         print(" [-] bad datablock : don't start with 1B 73 1B 01", data)
         #raise Exception("bad datablock : don't start with 1B 73 1B 01", data)
         return "","",""
-    if data[-2:] != "\x3F\x1C":
+    if data[-4:-2] != "\x3F\x1C":
         print(" [-] bad datablock : don't end with 3F 1C", data)
         #raise Exception("bad datablock : don't end with 3F 1C", data)
         return "","",""
@@ -259,7 +259,7 @@ def decode_isodatablock(data):
     if data[strip3_start] == "\x1B":
         strip3 = None
     else:
-        strip3 = data[strip3_start:-2]
+        strip3 = data[strip3_start:-4]
     
     return strip1, strip2, strip3
 
