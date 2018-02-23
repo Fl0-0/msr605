@@ -317,6 +317,8 @@ def erase_tracks(dev_ptr,t1, t2, t3):
     if status != "0":
         print(" [-] erase_tracks() error: %c" % status)
         #raise Exception(" [-] erase_tracks() error: %c" % status)
+        print " [-] Not erased."
+    print " [+] Erased."
 
 def set_leadingzero(self, track13, track2):
     status, result, _ = execute_waitresult("\x7A"+track13+track2)

@@ -174,7 +174,7 @@ def help_menu():
 	print "="*23+"ACTIONS"+"="*30
         print " compare/bulk_compare"
         print " copy/bulk_copy"
-        print " erase"
+        print " erase <1,2,3,12,13,23,123>"
         print " read/bulk_read"
         print " save"
         print " write/bulk_write"
@@ -503,8 +503,20 @@ def execute(cmd_tokens, dev_ptr):
     ############# ERASE
     if cmd_tokens[0] == 'erase':
         print " [*] swipe card to erase all tracks"
-        msr605_drv.erase_tracks(dev_ptr,t1=True, t2=True, t3=True)
-        print " [+] Erased."
+        if cmd_tokens[1]=="1":
+            msr605_drv.erase_tracks(dev_ptr,t1=True, t2=False, t3=False)
+        elif cmd_tokens[1]=="2":
+            msr605_drv.erase_tracks(dev_ptr,t1=False, t2=True, t3=False)
+        elif cmd_tokens[1]=="3":
+            msr605_drv.erase_tracks(dev_ptr,t1=False, t2=False, t3=True)
+        elif cmd_tokens[1]=="12":
+            msr605_drv.erase_tracks(dev_ptr,t1=True, t2=True, t3=False)
+        elif cmd_tokens[1]=="13":
+            msr605_drv.erase_tracks(dev_ptr,t1=True, t2=False, t3=True)
+        elif cmd_tokens[1]=="123":
+            msr605_drv.erase_tracks(dev_ptr,t1=True, t2=True, t3=True)
+        else:
+            print " [-] That track(s) does/did not exist"
         return True
     
     ############# COPY
