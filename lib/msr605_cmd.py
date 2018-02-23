@@ -606,7 +606,7 @@ def execute(cmd_tokens, dev_ptr):
         if jiraya.track_type == 'iso':
             res = msr605_drv.write_iso_tracks(t1,t2,t3,dev_ptr)
         if jiraya.track_type == 'raw':
-            #msr605_drv.write_raw_tracks(1,t2,t3,dev_ptr)
+            res = msr605_drv.write_raw_tracks(t1,t2,t3,dev_ptr)
             print(' [-] cannot write in raw mode yet, please: set type iso')
             return True
         if res:

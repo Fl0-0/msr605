@@ -288,16 +288,7 @@ def write_iso_tracks(t1, t2, t3,dev_ptr):
     return True
 
 def encode_rawdatablock(strip1, strip2, strip3):
-    # use empty string if you don't want to set a given strip : FIXME doesn't work
-    datablock = "\x1bs"
-    if strip1 != "":
-        datablock += "\x1b\x01"+chr(len(strip1))+strip1
-    if strip2 != "":
-        datablock += "\x1b\x02"+chr(len(strip2))+strip2
-    if strip3 != "":
-        datablock += "\x1b\x03"+chr(len(strip3))+strip3
-    datablock += "?\x1C"
-    #return datablock
+    # use empty string if you don't want to set a given strip
     return "\x1b\x73\x1b\x01"+chr(len(strip1))+strip1+"\x1b\x02"+chr(len(strip2))+strip2+"\x1b\x03"+chr(len(strip3))+strip3+"\x3F\x1C"
 
 def encode_isodatablock(strip1, strip2, strip3):
@@ -318,7 +309,9 @@ def erase_tracks(dev_ptr,t1, t2, t3):
         print(" [-] erase_tracks() error: %c" % status)
         #raise Exception(" [-] erase_tracks() error: %c" % status)
         print " [-] Not erased."
+        return False
     print " [+] Erased."
+    return True
 
 def set_leadingzero(self, track13, track2):
     status, result, _ = execute_waitresult("\x7A"+track13+track2)
