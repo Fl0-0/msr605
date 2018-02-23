@@ -317,6 +317,8 @@ def erase_tracks(dev_ptr,t1, t2, t3):
     if status != "0":
         print(" [-] erase_tracks() error: %c" % status)
         #raise Exception(" [-] erase_tracks() error: %c" % status)
+        print " [-] Not erased."
+    print " [+] Erased."
 
 def set_leadingzero(self, track13, track2):
     status, result, _ = execute_waitresult("\x7A"+track13+track2)
@@ -349,7 +351,7 @@ def set_bpi(bpi1, bpi2, bpi3,dev_ptr):
 def get_device_model(dev_ptr):
     _ , _, result = execute_waitresult("\x1B\x74", dev_ptr)
     return result[1:]
- 
+
 def get_firmware_version(dev_ptr):
     _ , _, result = execute_waitresult("\x1B\x76", dev_ptr)
     return result[1:]
