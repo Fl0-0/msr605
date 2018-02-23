@@ -216,6 +216,7 @@ def verifyEmptyTrack(t1,t2,t3):
         t2 = ''
     if t3 == None:
         t3 = ''
+    t1,t2,t3 = removeNullByteAtTheEnd(t1,t2,t3)
     return t1,t2,t3
 
 def decodeIso(t1,t2,t3,encode,num_bits=7):
@@ -245,6 +246,16 @@ def decodeIso(t1,t2,t3,encode,num_bits=7):
     
             
     return t1_new,t2_new,t3_new
+
+def removeNullByteAtTheEnd(track1,track2,track3):
+    if track1[-1:] == "\x00":
+        track1 = track1[:-1]
+    if track2[-1:] == "\x00":
+        track2 = track2[:-1]
+    if track3[-1:] == "\x00":
+        track3 = track3[:-1]
+
+    return track1,track2,track3
 
 def printTracks(track1, track2, track3):
     if jiraya.track_type == 'raw':
