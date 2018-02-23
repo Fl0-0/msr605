@@ -6,7 +6,10 @@ import shlex
 import signal
 import readline
 import os, sys
-sys.path.insert(0,'./lib/')
+
+folder = os.path.dirname(os.path.abspath(__file__)) + "/lib/"
+sys.path.append(folder)
+
 import msr605_cmd
 import msr605_drv
 import time
