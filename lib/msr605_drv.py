@@ -134,7 +134,7 @@ def execute_waitresult(command, dev_ptr, timeout=10):
     pos = result.rindex("\x1B")
     status = result[pos+1]
     res = result[pos+2:]
-    data = result[0:pos]
+    data = result
 
     return status, res, data
 
@@ -325,7 +325,6 @@ def set_bpi(bpi1, bpi2, bpi3,dev_ptr):
         modes.append("\xA1")    # 210bpi
     elif bpi1=="75": 
         modes.append("\xA0")    # 75bpi
-
     if bpi2=="210": 
         modes.append("\xD2")    # 210bpi
     elif bpi2=="75": 
@@ -343,27 +342,12 @@ def set_bpi(bpi1, bpi2, bpi3,dev_ptr):
             #raise Exception(" [-] set_bpi() error: %c for %s" % (status,hex(m)))
 
 def get_device_model(dev_ptr):
-    result = dev_ptr.write("\x1B"+"\x74") # escape_code = \x1B
-    status = dev_ptr.read()
-    time.sleep(0.1)
-    #status, result, blop = execute_waitresult("\x1B\x74", dev_ptr)
-    if status != "0":
-        return str(status)
-    else:
-        return ''
+    _ , _, result = execute_waitresult("\x1B\x74", dev_ptr)
+    return result[1:]
 
 def get_firmware_version(dev_ptr):
-    dev_ptr.write("\x1B\x76") # escape_code = \x1B
-    result = dev_ptr.read()
-    #print map(hex,bytearray(result))
-    #pos = result.rindex("\x1B")
-    #status = result[pos+1]
-    #res = result[pos+2:]
-    #data = result[0:pos]
-    if result != "0":
-        return "oups"#str(result)
-    else:
-        return ''
+    _ , _, result = execute_waitresult("\x1B\x76", dev_ptr)
+    return result[1:]
 
 def get_hico_loco_status(dev_ptr):
     result = dev_ptr.write("\x1B"+"\x64") # escape_code = \x1B
