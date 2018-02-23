@@ -236,13 +236,13 @@ def decodeIso(t1,t2,t3,encode,num_bits=7):
                 if ((char == i[1]) and (encode == 'bin')):
                     t2_new += map_7bits.keys()[map_7bits.values().index(i)]
                 if ((char == i[1]) and (encode == 'hex')):
-                    t1_new += i[0]
+                    t2_new += i[0]
         for char in t3:
             for i in map_7bits.values():
                 if ((char == i[1]) and (encode == 'bin')):
                     t3_new += map_7bits.keys()[map_7bits.values().index(i)]
                 if ((char == i[1]) and (encode == 'hex')):
-                    t1_new += i[0]
+                    t3_new += i[0]
     
             
     return t1_new,t2_new,t3_new
