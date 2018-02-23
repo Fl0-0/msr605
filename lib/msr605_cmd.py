@@ -43,6 +43,89 @@ cmdList = [ 'autosave ',
 	    'quit']
 
 
+map_5bits = {   "00001": ["00", "0"],
+                "10000": ["01", "1"],
+                "01000": ["02", "2"],
+                "11001": ["03", "3"],
+                "00100": ["04", "4"],
+                "10101": ["05", "5"],
+                "01101": ["06", "6"],
+                "11100": ["07", "7"],
+                "00010": ["08", "8"],
+                "10011": ["09", "9"],
+                "01011": ["0A", ":"],
+                "11010": ["0B", ";"],
+                "00111": ["0C", "<"],
+                "10110": ["0D", "="],
+                "01110": ["0E", ">"],
+                "11111": ["0F", "?"]
+            }
+
+map_7bits = {   "0000001": ["00", " "],
+                "1000000": ["01", "!"],
+                "0100000": ["02", "\""],
+                "1100001": ["03", "#"],
+                "0010000": ["04", "$"],
+                "1010001": ["05", "%"],
+                "0110001": ["06", "&"],
+                "1110000": ["07", "'"],
+                "0001000": ["08", "("],
+                "1001001": ["09", ")"],
+                "0101001": ["0A", "*"],
+                "1101000": ["0B", "+"],
+                "0011001": ["0C", "`"],
+                "1011000": ["0D", "-"],
+                "0111000": ["0E", "."],
+                "1111000": ["0F", "/"],
+                "0000100": ["10", "0"],
+                "1000101": ["11", "1"],
+                "0100101": ["12", "2"],
+                "1100100": ["13", "3"],
+                "0010101": ["14", "4"],
+                "1010100": ["15", "5"],
+                "0110100": ["16", "6"],
+                "1110101": ["17", "7"],
+                "0001101": ["18", "8"],
+                "1001100": ["19", "9"],
+                "0101100": ["1A", ":"],
+                "1101101": ["1B", ";"],
+                "0011100": ["1C", "<"],
+                "1011101": ["1D", "="],
+                "0111101": ["1E", ">"],
+                "1111100": ["1F", "?"],
+                "0000010": ["20", "@"],
+                "1000011": ["21", "A"],
+                "0100011": ["22", "B"],
+                "1100010": ["23", "C"],
+                "0010011": ["24", "D"],
+                "1010010": ["25", "E"],
+                "0110010": ["26", "F"],
+                "1110011": ["27", "G"],
+                "0001011": ["28", "H"],
+                "1001010": ["29", "I"],
+                "0101010": ["2A", "J"],
+                "1101011": ["2B", "K"],
+                "0011000": ["2C", "L"],
+                "1011011": ["2D", "M"],
+                "0111011": ["2E", "N"],
+                "1111010": ["2F", "O"],
+                "0000111": ["30", "P"],
+                "1000110": ["31", "Q"],
+                "0100110": ["32", "R"],
+                "1100111": ["33", "S"],
+                "0010110": ["34", "T"],
+                "1010111": ["35", "U"],
+                "0110111": ["36", "V"],
+                "1110110": ["37", "W"],
+                "0001110": ["38", "X"],
+                "1001111": ["39", "Y"],
+                "0101111": ["3A", "Z"],
+                "1101110": ["3B", "["],
+                "0011111": ["3C", "\\"],
+                "1011110": ["3D", "]"],
+                "0111110": ["3E", "^"],
+                "1111111": ["3F", "_"]
+            }
 ############################################################
 ############################################################
 ############################################################
@@ -78,7 +161,7 @@ def help_menu():
 	print "="*60
 	print " Play with MSR605 **\\(^.^)//**"
         print " Magnetic Swipe Card Reader/Writer"
-        print "="*23+"COMMAND LINE"+"=25"
+        print "="*23+"COMMAND LINE"+"="*25
         print ' -d /dev/ttyUSB0\t device'
         print ' -t <iso/raw>\t\t type'
         print ' -m <hico/loco>\t\t mode'
@@ -135,6 +218,34 @@ def verifyEmptyTrack(t1,t2,t3):
         t3 = ''
     return t1,t2,t3
 
+def decodeIso(t1,t2,t3,encode,num_bits=7):
+    t1_new = ""
+    t2_new = ""
+    t3_new = ""
+
+    if num_bits == 7:
+        for char in t1:
+            for i in map_7bits.values():
+                if ((char == i[1]) and (encode == 'bin')):
+                    t1_new += map_7bits.keys()[map_7bits.values().index(i)]
+                if ((char == i[1]) and (encode == 'hex')):
+                    t1_new += i[0]
+        for char in t2:
+            for i in map_7bits.values():
+                if ((char == i[1]) and (encode == 'bin')):
+                    t2_new += map_7bits.keys()[map_7bits.values().index(i)]
+                if ((char == i[1]) and (encode == 'hex')):
+                    t1_new += i[0]
+        for char in t3:
+            for i in map_7bits.values():
+                if ((char == i[1]) and (encode == 'bin')):
+                    t3_new += map_7bits.keys()[map_7bits.values().index(i)]
+                if ((char == i[1]) and (encode == 'hex')):
+                    t1_new += i[0]
+    
+            
+    return t1_new,t2_new,t3_new
+
 def printTracks(track1, track2, track3):
     if jiraya.track_type == 'raw':
         print(Fore.GREEN+" [1-binary]: "+Fore.RESET+get_hex_value(map(bin,bytearray(track1))))
@@ -149,6 +260,16 @@ def printTracks(track1, track2, track3):
         print(Fore.GREEN+" [2-ascii]: "+Fore.RESET+track2)
         print(Fore.GREEN+" [3-ascii]: "+Fore.RESET+track3)
     if jiraya.track_type == 'iso':
+        track1_b,track2_b,track3_b = decodeIso(track1,track2,track3,'bin')
+        print(Fore.GREEN+" [1-binary]: "+Fore.RESET+track1_b)
+        print(Fore.GREEN+" [2-binary]: "+Fore.RESET+track2_b)
+        print(Fore.GREEN+" [3-binary]: "+Fore.RESET+track3_b)
+        print("")
+        track1_h,track2_h,track3_h = decodeIso(track1,track2,track3,'hex')
+        print(Fore.GREEN+" [1-7bits]: "+Fore.RESET+track1_h)
+        print(Fore.GREEN+" [2-7bits]: "+Fore.RESET+track2_h)
+        print(Fore.GREEN+" [3-7bits]: "+Fore.RESET+track3_h)
+        print("")
         print(Fore.GREEN+" [1-ascii]: "+Fore.RESET+track1)
         print(Fore.GREEN+" [2-ascii]: "+Fore.RESET+track2)
         print(Fore.GREEN+" [3-ascii]: "+Fore.RESET+track3)
